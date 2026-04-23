@@ -145,7 +145,7 @@
   .feedback.fb-wrong   { background:var(--wrong-bg);   border-left:3px solid var(--wrong-border);   color:var(--wrong); }
   .feedback strong { font-weight:600; }
 
-  .next-wrap { margin-top:1rem; display:none; justify-content:flex-end; }
+  .next-wrap { margin-top:1rem; display:none; justify-content:space-between; }
   .next-wrap.show { display:flex; }
   .btn-next {
     background:var(--navy); color:var(--white); border:none;
@@ -154,6 +154,20 @@
     cursor:pointer; border-radius:2px; transition:background 0.18s, transform 0.12s;
   }
   .btn-next:hover { background:var(--accent); transform:translateX(3px); }
+
+  .q-btn {
+    background: var(--accent);
+    color: var(--white);
+    border: none;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .q-btn:hover { background: var(--accent-light); }
+  .q-btn.correct { background: var(--correct); }
+  .q-btn.wrong { background: var(--wrong); }
 
   /* RESULTS */
   #results {
@@ -185,10 +199,12 @@
 </div>
 
 <div class="progress-wrap">
-  <span class="progress-label" id="progressLabel">Question 1 of 50</span>
+  <span class="progress-label" id="progressLabel" onclick="toggleQuestionList()">Question 1 of 50</span>
   <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
   <span class="score-live" id="scoreLive">Score: 0 / 0</span>
 </div>
+
+<div id="questionList" style="display:none; background:var(--navy-mid); padding:0.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
 
 <div class="quiz-body" id="quizBody">
   <div id="results">
@@ -286,12 +302,15 @@ function buildCards() {
       <div class="options">${optsHtml}</div>
       <div class="feedback" id="fb-${i}"></div>
       <div class="next-wrap" id="next-${i}">
+        ${i > 0 ? `<button class="btn-next" onclick="prevQ(${i})">← Back</button>` : '<div></div>'}
         <button class="btn-next" onclick="${isLast ? 'showResults()' : `nextQ(${i})`}">
           ${isLast ? 'See Results →' : 'Next Question →'}
         </button>
       </div>`;
     body.insertBefore(card, results);
   });
+  const list = document.getElementById('questionList');
+  list.innerHTML = Q.map((_, i) => `<button class="q-btn" id="qbtn-${i}" onclick="jumpTo(${i})">Q${i+1}</button>`).join('');
 }
 
 function choose(qIdx, optIdx) {
@@ -335,6 +354,8 @@ function choose(qIdx, optIdx) {
 
   totalAnswered++;
   updateHUD(qIdx);
+  const qbtn = document.getElementById(`qbtn-${qIdx}`);
+  qbtn.classList.add(isCorrect ? 'correct' : 'wrong');
 }
 
 function nextQ(idx) {
@@ -346,6 +367,31 @@ function nextQ(idx) {
     setTimeout(() => next.scrollIntoView({ behavior:'smooth', block:'start' }), 60);
   }
   updateHUD(currentIdx);
+}
+
+function prevQ(idx) {
+  document.getElementById(`card-${idx}`).classList.remove('active');
+  currentIdx = idx - 1;
+  const prev = document.getElementById(`card-${currentIdx}`);
+  if (prev) {
+    prev.classList.add('active');
+    setTimeout(() => prev.scrollIntoView({ behavior:'smooth', block:'start' }), 60);
+  }
+  updateHUD(currentIdx);
+}
+
+function toggleQuestionList() {
+  const list = document.getElementById('questionList');
+  list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+}
+
+function jumpTo(idx) {
+  if (!document.getElementById(`card-${idx}`).dataset.done) return;
+  document.querySelector('.q-card.active')?.classList.remove('active');
+  currentIdx = idx;
+  document.getElementById(`card-${idx}`).classList.add('active');
+  updateHUD(idx);
+  setTimeout(() => document.getElementById(`card-${idx}`).scrollIntoView({ behavior:'smooth', block:'start' }), 60);
 }
 
 function updateHUD(idx) {
@@ -384,6 +430,7 @@ function restartQuiz() {
   document.getElementById('progressFill').style.width = '0%';
   document.getElementById('progressLabel').textContent = 'Question 1 of 50';
   document.getElementById('scoreLive').textContent = 'Score: 0 / 0';
+  document.getElementById('questionList').style.display = 'none';
   buildCards();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
