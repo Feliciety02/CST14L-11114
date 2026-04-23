@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Architecture of Resilience — Study Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2540;
+    --navy-mid: #233060;
+    --steel: #3a5080;
+    --accent: #b5855a;
+    --accent-light: #d4a478;
+    --cream: #f5f0e8;
+    --cream-dark: #ede6d8;
+    --white: #fafaf8;
+    --text: #1a2030;
+    --text-muted: #4a5570;
+    --warn: #c0392b;
+    --warn-light: #e8d0cc;
+    --grid: rgba(26,37,64,0.06);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 300;
+    line-height: 1.75;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 4px;
+    padding: 3.5rem 3rem 3rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(26,37,64,0.22);
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-light);
+    margin-bottom: 1rem;
+  }
+  .cover h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.75rem;
+  }
+  .cover-sub {
+    font-size: 1.05rem;
+    color: rgba(250,250,248,0.72);
+    font-style: italic;
+    margin-bottom: 2rem;
+  }
+  .cover-tagline {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    color: var(--accent-light);
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    max-width: 360px;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  .section {
+    margin-bottom: 2.8rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--navy);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    background: var(--navy);
+    color: var(--white);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--white);
+    border: 1px solid rgba(26,37,64,0.12);
+    border-top: 3px solid var(--navy);
+    padding: 1.15rem 1.2rem;
+    border-radius: 2px;
+  }
+  .card.accent-border { border-top-color: var(--accent); }
+  .card.warn-border { border-top-color: var(--warn); }
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 0.5rem;
+  }
+  .card p, .card li {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .card ul { padding-left: 1.1rem; }
+
+  /* ── TABLE ── */
+  .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    background: var(--white);
+  }
+  .styled-table thead th {
+    background: var(--navy);
+    color: var(--white);
+    padding: 0.65rem 1rem;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .styled-table tbody td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--cream-dark);
+    vertical-align: top;
+    color: var(--text-muted);
+  }
+  .styled-table tbody tr:last-child td { border-bottom: none; }
+  .styled-table tbody td:first-child {
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .penalty-cell {
+    background: var(--warn-light);
+    color: var(--warn) !important;
+    font-weight: 600 !important;
+  }
+
+  /* ── PYRAMID ── */
+  .pyramid-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .pyramid-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .pyramid-row:last-child { border-bottom: none; }
+  .pyramid-tier {
+    width: 7px;
+    flex-shrink: 0;
+  }
+  .t1 { background: var(--navy); }
+  .t2 { background: var(--steel); }
+  .t3 { background: var(--accent); }
+  .t4 { background: var(--accent-light); }
+  .pyramid-content {
+    background: var(--white);
+    padding: 0.9rem 1.1rem;
+    flex: 1;
+  }
+  .pyramid-content strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .pyramid-content span {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ── LIFECYCLE STEPS ── */
+  .lifecycle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .lifecycle-step {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  .lifecycle-arrow {
+    color: var(--accent);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ── ALERT BOX ── */
+  .alert {
+    background: var(--warn-light);
+    border-left: 4px solid var(--warn);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.88rem;
+    color: var(--warn);
+    margin-top: 1rem;
+    border-radius: 0 2px 2px 0;
+  }
+  .alert strong { font-weight: 600; }
+
+  /* ── INFO BOX ── */
+  .infobox {
+    background: var(--navy);
+    color: var(--white);
+    padding: 1rem 1.3rem;
+    border-radius: 2px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    line-height: 1.6;
+  }
+  .infobox strong { color: var(--accent-light); }
+
+  /* ── FORMULA BOX ── */
+  .formula {
+    background: var(--navy-mid);
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 1rem 1.4rem;
+    border-radius: 2px;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.02em;
+    text-align: center;
+  }
+
+  /* ── PHASE STEPS ── */
+  .phases {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.8rem;
+  }
+  .phase {
+    background: var(--white);
+    border: 1px solid rgba(26,37,64,0.12);
+    padding: 0.9rem 1rem;
+    position: relative;
+    border-radius: 2px;
+  }
+  .phase-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: rgba(26,37,64,0.08);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .phase h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.3rem;
+  }
+  .phase p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── RINGS ── */
+  .rings { display: flex; flex-direction: column; gap: 0.7rem; }
+  .ring {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--white);
+    border: 1px solid rgba(26,37,64,0.1);
+    padding: 0.9rem 1rem;
+    border-radius: 2px;
+  }
+  .ring-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: var(--navy);
+    color: var(--white);
+    padding: 0.25rem 0.55rem;
+    border-radius: 2px;
+    margin-top: 0.15rem;
+  }
+  .ring-label.r2 { background: var(--steel); }
+  .ring-label.r3 { background: var(--accent); }
+  .ring-label.ro { background: var(--text-muted); }
+  .ring-content h4 { font-size: 0.9rem; font-weight: 600; color: var(--navy); margin-bottom: 0.2rem; }
+  .ring-content p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.55; }
+
+  /* ── RPO/RTO ── */
+  .rto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .rto-box {
+    background: var(--navy);
+    color: var(--white);
+    padding: 1.2rem;
+    border-radius: 2px;
+  }
+  .rto-box h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-light);
+    margin-bottom: 0.4rem;
+  }
+  .rto-box p { font-size: 0.85rem; line-height: 1.55; color: rgba(250,250,248,0.8); }
+  .rto-question {
+    font-style: italic;
+    color: var(--accent-light);
+    font-size: 0.82rem;
+    margin-top: 0.4rem;
+  }
+
+  /* ── QUOTE ── */
+  .blockquote {
+    border-left: 4px solid var(--accent);
+    padding: 0.8rem 1.2rem;
+    background: var(--white);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--navy);
+    margin-top: 1rem;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ── KEY TAKEAWAY ── */
+  .takeaway {
+    background: var(--navy);
+    color: var(--white);
+    padding: 1.3rem 1.6rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    font-style: italic;
+    text-align: center;
+    margin-top: 1.2rem;
+  }
+
+  /* ── AUDIT PILLARS ── */
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+  .pillar {
+    background: var(--white);
+    border: 1px solid rgba(26,37,64,0.1);
+    border-top: 3px solid var(--navy);
+    padding: 1rem;
+    border-radius: 2px;
+  }
+  .pillar h4 { font-size: 0.92rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+  .pillar .focus-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+  }
+  .pillar p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+
+  @media (max-width: 600px) {
+    .rto-grid, .pillars { grid-template-columns: 1fr; }
+    .cover { padding: 2rem 1.5rem; }
+    .page { padding: 1.5rem 1rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-eyebrow">Study Notes · Cybersecurity Governance</div>
+    <h1>The Architecture<br>of Resilience</h1>
+    <p class="cover-sub">Cybersecurity Governance, Risk Management, and Operational Continuity</p>
+    <div class="cover-tagline">Elevating cybersecurity from an operational necessity to a strategic foundation for financial stability.</div>
+  </div>
+
+  <!-- SECTION 1: THREAT LANDSCAPE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">The Threat Landscape — Zero Trust Core</span>
+    </div>
+    <div class="rings">
+      <div class="ring">
+        <span class="ring-label">Outer Ring 1</span>
+        <div class="ring-content">
+          <h4>Artificial Intelligence</h4>
+          <p>Attackers leverage Gen AI (e.g., Anthropic's Mythos model) to bypass traditional vulnerability analysis, lowering the barrier for entry and exponentially scaling phishing and ransomware.</p>
+        </div>
+      </div>
+      <div class="ring">
+        <span class="ring-label r2">Middle Ring 2</span>
+        <div class="ring-content">
+          <h4>IoT &amp; Connected Devices</h4>
+          <p>The explosion of IoT/IoMT creates millions of unmanaged endpoints with long lifespans and complex patching requirements.</p>
+        </div>
+      </div>
+      <div class="ring">
+        <span class="ring-label r3">Zero Trust Core</span>
+        <div class="ring-content">
+          <h4>Never trust, always verify</h4>
+          <p>Identity and access management must replace the obsolete network perimeter.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: GLOBAL MANDATES -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">The Global Mandates</span>
+    </div>
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>Scope</th>
+          <th>Mandate</th>
+          <th>Penalties</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GDPR (EU): Global data privacy</td>
+          <td>Appropriate technical / organizational measures</td>
+          <td class="penalty-cell">Up to 4% of global turnover</td>
+        </tr>
+        <tr>
+          <td>DORA (EU Financials): Digital Operational Resilience Act</td>
+          <td>Strict ICT third-party risk management and mandatory incident reporting</td>
+          <td class="penalty-cell">Severe fines and operational suspension</td>
+        </tr>
+        <tr>
+          <td>NYCRR Part 500 (US): NYDFS-regulated entities</td>
+          <td>Annual compliance certification, CISO designation, 72-hour breach reporting</td>
+          <td class="penalty-cell">Over $144 million in fines levied since 2021 (e.g., GEICO's $9.75M penalty)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="infobox" style="margin-top:0.9rem;">
+      <strong>Key Principle:</strong> Regulatory compliance requires demonstrable, documented evidence of proactive risk mitigation.
+    </div>
+  </div>
+
+  <!-- SECTION 3: BLUEPRINT OF TRUST -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">The Blueprint of Trust — Policy Hierarchy</span>
+    </div>
+    <div class="pyramid-stack">
+      <div class="pyramid-row">
+        <div class="pyramid-tier t1"></div>
+        <div class="pyramid-content">
+          <strong>Business Objectives</strong>
+          <span>Core operational goals of the enterprise</span>
+        </div>
+      </div>
+      <div class="pyramid-row">
+        <div class="pyramid-tier t2"></div>
+        <div class="pyramid-content">
+          <strong>The CIA Triad</strong>
+          <span>Confidentiality (preventing unauthorized access) · Integrity (preventing unauthorized modification) · Availability (ensuring reliable access)</span>
+        </div>
+      </div>
+      <div class="pyramid-row">
+        <div class="pyramid-tier t3"></div>
+        <div class="pyramid-content">
+          <strong>Categorized Policies</strong>
+          <span>Enterprise Security Policy (ESP) · Issue-Specific Policies (ISSP) · System-Specific Policies (SysSP)</span>
+        </div>
+      </div>
+      <div class="pyramid-row">
+        <div class="pyramid-tier t4"></div>
+        <div class="pyramid-content">
+          <strong>Top Management Approval</strong>
+          <span>Without formal C-Suite / Board sign-off, policies lack the authority required to be legally defensible.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: LIVING RULEBOOK -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">The Living Rulebook — Policy Lifecycle</span>
+    </div>
+    <div class="lifecycle">
+      <span class="lifecycle-step">Draft</span>
+      <span class="lifecycle-arrow">→</span>
+      <span class="lifecycle-step">Approve</span>
+      <span class="lifecycle-arrow">→</span>
+      <span class="lifecycle-step">Communicate</span>
+      <span class="lifecycle-arrow">→</span>
+      <span class="lifecycle-step">Enforce</span>
+      <span class="lifecycle-arrow">→</span>
+      <span class="lifecycle-step">Audit</span>
+      <span class="lifecycle-arrow">→</span>
+      <span class="lifecycle-step">Review &amp; Update</span>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Annual Review Cycles</div>
+        <p>Policies must be reviewed at least annually, or immediately following significant technological changes or incidents.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Strict Version Control</div>
+        <p>SHA-256 hash verification and immutable logging prove policies were not altered retroactively during a breach investigation.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Exception Handling</div>
+        <p>A 1:1 ratio of exceptions to violations suggests a policy is too rigid, encouraging staff to bypass controls.</p>
+      </div>
+    </div>
+    <div class="alert">
+      <strong>⚠ Warning:</strong> 22% of Stage 1 Audits fail due to lack of evidence surrounding policy approval and communication.
+    </div>
+  </div>
+
+  <!-- SECTION 5: MAPPING THE TERRAIN -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Mapping the Terrain — Asset Management (ITAM)</span>
+    </div>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-num">1</div>
+        <h4>Inventory &amp; Discovery</h4>
+        <p>Continuously detecting every physical device, software application, and data repository connected to the network.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">2</div>
+        <h4>Classification</h4>
+        <p>Categorizing assets based on sensitivity: Mission Critical, Sensitive, Internal, Public.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">3</div>
+        <h4>Dependency Mapping</h4>
+        <p>Linking individual IT assets to Critical Business Functions to prioritize protection and recovery efforts.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">4</div>
+        <h4>The ITAM Lifecycle</h4>
+        <p>Tracking an asset from Procurement through Secure Disposal.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: STANDARDS & GUARDRAILS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <span class="section-title">Standards &amp; Guardrails</span>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Global Standard</div>
+        <h3>NIST CSF 2.0</h3>
+        <p>A functional lifecycle: Identify → Protect → Detect → Respond → Recover.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Global Standard</div>
+        <h3>ISO 27001</h3>
+        <p>The global standard for an Information Security Management System (ISMS).</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Global Standard</div>
+        <h3>PCI DSS</h3>
+        <p>Highly prescriptive operational standards for payment processing.</p>
+      </div>
+    </div>
+    <div class="infobox" style="margin-top:1rem;">
+      <strong>Policy-as-Code (Automated Guardrails):</strong> Modern enforcement cannot rely on human memory. Translating written policy into technical guardrails — e.g., CI/CD pipeline security scanning automatically blocks code with hardcoded credentials; Identity platforms enforce Just-in-Time access.
+    </div>
+  </div>
+
+  <!-- SECTION 7: PROACTIVE SHIELD -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <span class="section-title">The Proactive Shield — Safeguards</span>
+    </div>
+    <div class="card-grid">
+      <div class="card accent-border">
+        <div class="card-label">Layer 1 — Administrative Safeguards (The Human Firewall)</div>
+        <ul>
+          <li>Security awareness training</li>
+          <li>Acceptable Use Policies and onboarding background checks</li>
+        </ul>
+      </div>
+      <div class="card accent-border">
+        <div class="card-label">Layer 2 — Technical Safeguards (The Digital Perimeter)</div>
+        <ul>
+          <li>Intrusion Detection / Prevention Systems (IDS/IPS)</li>
+          <li>Multi-Factor Authentication (MFA) and Role-Based Access Control (RBAC)</li>
+          <li>Continuous patch management and data encryption</li>
+        </ul>
+      </div>
+    </div>
+    <div class="takeaway">Proactive prevention is exponentially cheaper and less disruptive than reactive incident response.</div>
+  </div>
+
+  <!-- SECTION 8: ECONOMICS OF CYBER RISK -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <span class="section-title">The Economics of Cyber Risk</span>
+    </div>
+    <div class="formula">
+      [Single Loss Expectancy (SLE)] × [Annual Rate of Occurrence (ARO)] = [Annual Loss Expectancy (ALE)]
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-label">Decision Rule</div>
+        <p>If the cost of the control is less than the reduction in ALE, the investment is justified.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">Gordon-Loeb Model</div>
+        <p>Historically suggests optimal security spend should not exceed ~37% of expected loss.</p>
+      </div>
+      <div class="card">
+        <div class="card-label">ROI of Threat Intelligence (CTI)</div>
+        <p>CTI acts as a multiplier, drastically reducing the Mean Time to Detect (MTTD) and Mean Time to Respond (MTTR), thereby shrinking the attacker's dwell time.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 9: VERIFYING THE POSTURE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <span class="section-title">Verifying the Posture — Audit Types</span>
+    </div>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="focus-tag">Internal Audits</div>
+        <h4>Continuous, daily operational alignment</h4>
+        <p>Spot-checking technical configurations against documented rules.</p>
+      </div>
+      <div class="pillar">
+        <div class="focus-tag">External Audits</div>
+        <h4>Independent, unbiased verification</h4>
+        <p>Third-party penetration testing and vulnerability assessments to simulate real-world attacks.</p>
+      </div>
+      <div class="pillar">
+        <div class="focus-tag">Compliance Audits</div>
+        <h4>Regulatory and legal survival</h4>
+        <p>Formal examinations by certified bodies (SOC 2, ISO 27001, NYDFS).</p>
+      </div>
+    </div>
+    <div class="blockquote">Trust, but verify. A policy without an audit trail is merely a suggestion.</div>
+  </div>
+
+  <!-- SECTION 10: INCIDENT RESPONSE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <span class="section-title">Chaos to Control — Incident Response Team (IRT)</span>
+    </div>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-num">1</div>
+        <h4>Preparation</h4>
+        <p>Establishing the IRT, building runbooks, and conducting tabletop exercises.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">2</div>
+        <h4>Detection &amp; Analysis</h4>
+        <p>Identifying indicators of compromise and classifying the event.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">3</div>
+        <h4>Containment</h4>
+        <p>Isolating affected systems to prevent lateral movement.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">4</div>
+        <h4>Eradication</h4>
+        <p>Removing the malicious actors, malware, and root causes.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">5</div>
+        <h4>Recovery</h4>
+        <p>Restoring systems to normal operations securely.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-num">6</div>
+        <h4>Lessons Learned</h4>
+        <p>Post-incident review to update policies and improve future defenses.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 11: BOUNCING BACK -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <span class="section-title">Bouncing Back — BCDR Metrics</span>
+    </div>
+    <div class="rto-grid">
+      <div class="rto-box">
+        <h4>Recovery Point Objective (RPO)</h4>
+        <p>Measures tolerable data loss. Dictates the frequency of data backup programs and immutable storage strategies.</p>
+        <p class="rto-question">"How much historical data can we afford to lose?"</p>
+      </div>
+      <div class="rto-box">
+        <h4>Recovery Time Objective (RTO)</h4>
+        <p>Measures tolerable downtime. Dictates investments in redundant systems, active-active failovers, and cloud recovery.</p>
+        <p class="rto-question">"How fast must we be back online?"</p>
+      </div>
+    </div>
+    <div class="infobox" style="margin-top:0.9rem;">
+      Survival requires knowing your metrics. Business Continuity and Disaster Recovery (BCDR) plans must be tested annually to guarantee these objectives are met.
+    </div>
+  </div>
+
+  <!-- SECTION 12: THE RESILIENCE ECOSYSTEM -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <span class="section-title">The Resilience Ecosystem — Complete View</span>
+    </div>
+    <div class="rings">
+      <div class="ring">
+        <span class="ring-label">Ring 1</span>
+        <div class="ring-content">
+          <h4>Policies &amp; Governance — The Blueprint</h4>
+          <p>Defining the rules, CIA triad, and C-Suite expectations.</p>
+        </div>
+      </div>
+      <div class="ring">
+        <span class="ring-label r2">Ring 2</span>
+        <div class="ring-content">
+          <h4>Operations &amp; Prevention — The Walls</h4>
+          <p>ITAM, Zero Trust, MFA, and automated guardrails blocking threats.</p>
+        </div>
+      </div>
+      <div class="ring">
+        <span class="ring-label r3">Ring 3</span>
+        <div class="ring-content">
+          <h4>Response &amp; Recovery — The Safety Net</h4>
+          <p>IRT, 6-Phase playbooks, RTO/RPO, and BCDR.</p>
+        </div>
+      </div>
+      <div class="ring">
+        <span class="ring-label ro">Outer Ring</span>
+        <div class="ring-content">
+          <h4>Auditing &amp; Legal Compliance — The Verification</h4>
+          <p>Independent audits, GDPR/NYDFS adherence, and financial ROI (ALE).</p>
+        </div>
+      </div>
+    </div>
+    <div class="takeaway">Cybersecurity is not a cost center — it is an interconnected ecosystem of resilience that transforms operational risk into a strategic competitive advantage.</div>
+  </div>
+
+</div>
+</body>
+</html>
