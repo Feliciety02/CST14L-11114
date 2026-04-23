@@ -19,11 +19,12 @@
     --muted: #5a6480;
     --correct: #1e6b45;
     --correct-bg: #d4edda;
+    --correct-border: #27ae60;
     --wrong: #8b1c1c;
     --wrong-bg: #f5d0d0;
+    --wrong-border: #c0392b;
     --grid: rgba(26,37,64,0.055);
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -38,7 +39,6 @@
     min-height: 100vh;
   }
 
-  /* ── HEADER ── */
   .header {
     background: var(--navy);
     padding: 2.5rem 2rem 2rem;
@@ -48,8 +48,7 @@
   }
   .header::before {
     content: '';
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background-image:
       linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
@@ -57,266 +56,123 @@
   }
   .header-eyebrow {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent-light);
-    margin-bottom: 0.6rem;
+    font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent-light); margin-bottom: 0.6rem; position: relative;
   }
   .header h1 {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
-    font-weight: 900;
-    color: var(--white);
-    line-height: 1.15;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.6rem,4vw,2.6rem); font-weight: 900;
+    color: var(--white); line-height: 1.15; margin-bottom: 0.5rem; position: relative;
   }
-  .header-sub {
-    color: rgba(250,250,248,0.6);
-    font-size: 0.9rem;
-    font-style: italic;
-  }
+  .header-sub { color: rgba(250,250,248,0.6); font-size: 0.9rem; font-style: italic; position: relative; }
 
-  /* ── PROGRESS BAR ── */
   .progress-wrap {
-    background: var(--navy-mid);
-    padding: 0.9rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(26,37,64,0.18);
+    background: var(--navy-mid); padding: 0.85rem 2rem;
+    display: flex; align-items: center; gap: 1.2rem;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,37,64,0.2);
   }
-  .progress-bar-bg {
-    flex: 1;
-    height: 5px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 3px;
-    transition: width 0.4s ease;
-    width: 0%;
-  }
-  .progress-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--accent-light);
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-  }
-  .score-live {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: rgba(250,250,248,0.55);
-    white-space: nowrap;
-  }
+  .progress-bar-bg { flex:1; height:5px; background:rgba(255,255,255,0.12); border-radius:3px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s ease; width:0%; }
+  .progress-label { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--accent-light); letter-spacing:0.08em; white-space:nowrap; }
+  .score-live    { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:rgba(250,250,248,0.55); white-space:nowrap; }
 
-  /* ── QUIZ BODY ── */
-  .quiz-body {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem 5rem;
-  }
+  .quiz-body { max-width: 780px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
 
-  /* ── QUESTION CARD ── */
-  .q-card {
+  /* ONE CARD VISIBLE AT A TIME */
+  .q-card { display: none; }
+  .q-card.active {
+    display: block;
     background: var(--white);
     border: 1px solid rgba(26,37,64,0.1);
     border-left: 4px solid var(--navy);
     border-radius: 3px;
     padding: 1.6rem 1.8rem 1.4rem;
-    margin-bottom: 1.4rem;
-    transition: border-color 0.25s;
-    animation: fadeUp 0.3s ease both;
+    margin-bottom: 1.6rem;
+    transition: border-left-color 0.3s;
+    animation: fadeUp 0.35s ease both;
   }
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
   }
-  .q-card.answered-correct { border-left-color: var(--correct); }
-  .q-card.answered-wrong   { border-left-color: var(--wrong); }
+  .q-card.active.state-correct { border-left-color: var(--correct-border); }
+  .q-card.active.state-wrong   { border-left-color: var(--wrong-border); }
 
-  .q-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 0.45rem;
-  }
-  .q-text {
-    font-size: 0.97rem;
-    font-weight: 500;
-    color: var(--navy);
-    line-height: 1.6;
-    margin-bottom: 1.1rem;
-  }
+  .q-meta { display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem; }
+  .q-num  { font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); }
+  .q-status { font-family:'JetBrains Mono',monospace; font-size:0.62rem; padding:0.15rem 0.5rem; border-radius:2px; display:none; }
+  .q-status.show { display:inline-block; }
+  .q-status.correct-tag { background:var(--correct-bg); color:var(--correct); }
+  .q-status.wrong-tag   { background:var(--wrong-bg);   color:var(--wrong); }
 
-  /* ── OPTIONS ── */
-  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .q-text { font-size:0.97rem; font-weight:500; color:var(--navy); line-height:1.6; margin-bottom:1.1rem; }
 
+  .options { display:flex; flex-direction:column; gap:0.5rem; }
   .option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.65rem 0.9rem;
-    border: 1.5px solid rgba(26,37,64,0.12);
-    border-radius: 2px;
-    cursor: pointer;
-    transition: border-color 0.18s, background 0.18s, transform 0.12s;
-    background: var(--cream);
-    user-select: none;
+    display:flex; align-items:flex-start; gap:0.75rem;
+    padding:0.65rem 0.9rem;
+    border:1.5px solid rgba(26,37,64,0.13); border-radius:2px;
+    cursor:pointer;
+    transition:border-color 0.15s, background 0.15s, transform 0.12s;
+    background:var(--cream); user-select:none;
   }
-  .option:hover:not(.locked) {
-    border-color: var(--accent);
-    background: var(--cream-dark);
-    transform: translateX(3px);
-  }
-  .option.selected { border-color: var(--navy); background: #e8edf5; }
-  .option.correct  { border-color: var(--correct); background: var(--correct-bg); }
-  .option.wrong    { border-color: var(--wrong); background: var(--wrong-bg); }
-  .option.locked   { cursor: default; }
-  .option.reveal-correct { border-color: var(--correct); background: var(--correct-bg); }
+  .option:hover:not(.locked) { border-color:var(--accent); background:var(--cream-dark); transform:translateX(3px); }
+  .option.locked { cursor:default; }
+  .option.opt-correct { border-color:var(--correct-border); background:var(--correct-bg); }
+  .option.opt-wrong   { border-color:var(--wrong-border);   background:var(--wrong-bg); }
 
   .opt-letter {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    font-weight: 500;
-    background: var(--navy);
-    color: var(--white);
-    width: 22px;
-    height: 22px;
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 1px;
-    transition: background 0.18s;
+    font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:500;
+    background:var(--navy); color:var(--white);
+    width:22px; height:22px; border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px; transition:background 0.2s;
   }
-  .option.correct  .opt-letter { background: var(--correct); }
-  .option.wrong    .opt-letter { background: var(--wrong); }
-  .option.reveal-correct .opt-letter { background: var(--correct); }
+  .option.opt-correct .opt-letter { background:var(--correct); }
+  .option.opt-wrong   .opt-letter { background:var(--wrong); }
 
-  .opt-text {
-    font-size: 0.88rem;
-    color: var(--text);
-    line-height: 1.55;
-  }
+  .opt-text { font-size:0.88rem; color:var(--text); line-height:1.55; flex:1; }
+  .opt-icon { font-size:1rem; margin-left:auto; align-self:center; flex-shrink:0; min-width:1.2rem; text-align:center; }
 
-  /* ── FEEDBACK ── */
   .feedback {
-    margin-top: 0.8rem;
-    font-size: 0.82rem;
-    padding: 0.55rem 0.85rem;
-    border-radius: 2px;
-    display: none;
-    line-height: 1.5;
+    margin-top:1rem; padding:0.75rem 1rem; border-radius:2px;
+    font-size:0.84rem; line-height:1.6; display:none;
+    animation:fadeUp 0.25s ease both;
   }
-  .feedback.show { display: block; }
-  .feedback.fb-correct { background: var(--correct-bg); color: var(--correct); }
-  .feedback.fb-wrong   { background: var(--wrong-bg); color: var(--wrong); }
+  .feedback.show { display:block; }
+  .feedback.fb-correct { background:var(--correct-bg); border-left:3px solid var(--correct-border); color:var(--correct); }
+  .feedback.fb-wrong   { background:var(--wrong-bg);   border-left:3px solid var(--wrong-border);   color:var(--wrong); }
+  .feedback strong { font-weight:600; }
 
-  /* ── RESULTS ── */
+  .next-wrap { margin-top:1rem; display:none; justify-content:flex-end; }
+  .next-wrap.show { display:flex; }
+  .btn-next {
+    background:var(--navy); color:var(--white); border:none;
+    padding:0.6rem 1.6rem;
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+    cursor:pointer; border-radius:2px; transition:background 0.18s, transform 0.12s;
+  }
+  .btn-next:hover { background:var(--accent); transform:translateX(3px); }
+
+  /* RESULTS */
   #results {
-    display: none;
-    background: var(--navy);
-    color: var(--white);
-    border-radius: 4px;
-    padding: 3rem 2.5rem;
-    text-align: center;
-    margin-top: 2rem;
-    animation: fadeUp 0.5s ease both;
+    display:none; background:var(--navy); color:var(--white);
+    border-radius:4px; padding:3rem 2.5rem; text-align:center;
+    margin-top:2rem; animation:fadeUp 0.5s ease both;
   }
-  #results h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: var(--white);
-  }
-  .score-big {
-    font-family: 'Playfair Display', serif;
-    font-size: 4.5rem;
-    font-weight: 900;
-    color: var(--accent-light);
-    line-height: 1;
-    margin: 1rem 0 0.25rem;
-  }
-  .score-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.15em;
-    color: rgba(250,250,248,0.55);
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-  }
-  .grade-badge {
-    display: inline-block;
-    padding: 0.4rem 1.2rem;
-    border: 1px solid var(--accent);
-    color: var(--accent-light);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 2rem;
-    border-radius: 2px;
-  }
-  .result-message {
-    font-size: 0.95rem;
-    color: rgba(250,250,248,0.75);
-    font-style: italic;
-    margin-bottom: 2rem;
-    line-height: 1.65;
-  }
-  .btn-restart {
-    background: var(--accent);
-    color: var(--white);
-    border: none;
-    padding: 0.8rem 2.2rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: background 0.2s, transform 0.15s;
-  }
-  .btn-restart:hover { background: var(--accent-light); transform: translateY(-2px); }
+  #results h2 { font-family:'Playfair Display',serif; font-size:2rem; margin-bottom:0.5rem; }
+  .score-big { font-family:'Playfair Display',serif; font-size:5rem; font-weight:900; color:var(--accent-light); line-height:1; margin:1rem 0 0.2rem; }
+  .score-label { font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.15em; color:rgba(250,250,248,0.45); text-transform:uppercase; margin-bottom:1.2rem; }
+  .grade-badge { display:inline-block; padding:0.4rem 1.2rem; border:1px solid var(--accent); color:var(--accent-light); font-family:'JetBrains Mono',monospace; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:1.5rem; border-radius:2px; }
+  .result-message { font-size:0.95rem; color:rgba(250,250,248,0.7); font-style:italic; margin-bottom:2rem; line-height:1.7; max-width:480px; margin-left:auto; margin-right:auto; }
+  .btn-restart { background:var(--accent); color:var(--white); border:none; padding:0.85rem 2.4rem; font-family:'JetBrains Mono',monospace; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; border-radius:2px; transition:background 0.2s,transform 0.15s; }
+  .btn-restart:hover { background:var(--accent-light); transform:translateY(-2px); }
 
-  /* ── SUBMIT ── */
-  .submit-wrap {
-    text-align: center;
-    margin-top: 2.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(26,37,64,0.12);
-  }
-  .btn-submit {
-    background: var(--navy);
-    color: var(--white);
-    border: none;
-    padding: 0.9rem 3rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: background 0.2s, transform 0.15s;
-  }
-  .btn-submit:hover { background: var(--navy-mid); transform: translateY(-2px); }
-  .btn-submit:disabled { opacity: 0.4; cursor: default; transform: none; }
-
-  @media (max-width: 560px) {
-    .quiz-body { padding: 1.5rem 1rem 4rem; }
-    .q-card { padding: 1.2rem 1.1rem; }
-    .progress-wrap { gap: 0.7rem; }
+  @media(max-width:560px){
+    .quiz-body{padding:1.5rem 1rem 4rem;}
+    .q-card.active{padding:1.2rem 1.1rem;}
+    .progress-wrap{gap:0.6rem;padding:0.75rem 1rem;}
   }
 </style>
 </head>
@@ -325,20 +181,16 @@
 <div class="header">
   <div class="header-eyebrow">Cybersecurity Governance · Risk Management · Operational Continuity</div>
   <h1>The Architecture of Resilience</h1>
-  <p class="header-sub">50-Item Multiple Choice Assessment</p>
+  <p class="header-sub">50-Item Quiz — Pick an answer to instantly see if you're right</p>
 </div>
 
 <div class="progress-wrap">
-  <span class="progress-label" id="progressLabel">0 / 50 answered</span>
+  <span class="progress-label" id="progressLabel">Question 1 of 50</span>
   <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
-  <span class="score-live" id="scoreLive">Score: 0</span>
+  <span class="score-live" id="scoreLive">Score: 0 / 0</span>
 </div>
 
 <div class="quiz-body" id="quizBody">
-  <!-- Questions injected by JS -->
-  <div class="submit-wrap">
-    <button class="btn-submit" id="submitBtn" disabled onclick="submitQuiz()">Submit Quiz</button>
-  </div>
   <div id="results">
     <h2>Assessment Complete</h2>
     <div class="score-big" id="finalScore">—</div>
@@ -350,511 +202,193 @@
 </div>
 
 <script>
-const questions = [
-  // ── THREAT LANDSCAPE ──
-  {
-    q: "According to the document, what is the 'Zero Trust Core' principle?",
-    opts: ["Always trust internal networks, verify external ones", "Never trust, always verify — identity and access management must replace the obsolete network perimeter", "Trust verified users completely once authenticated", "Verify devices only, not users"],
-    ans: 1,
-    fb: "The Zero Trust Core states: 'Never trust, always verify. Identity and access management must replace the obsolete network perimeter.'"
-  },
-  {
-    q: "In the threat landscape model, what does the Outer Ring 1 threat represent?",
-    opts: ["IoT & Connected Devices", "Ransomware networks", "Artificial Intelligence used by attackers", "Supply chain vulnerabilities"],
-    ans: 2,
-    fb: "Outer Ring 1 is Artificial Intelligence — attackers leverage Gen AI to bypass traditional vulnerability analysis."
-  },
-  {
-    q: "How do attackers use Gen AI (e.g., Anthropic's Mythos model) according to the document?",
-    opts: ["To encrypt stolen data", "To bypass traditional vulnerability analysis, lowering the barrier for entry and scaling phishing and ransomware", "To automate patch deployment", "To monitor network traffic"],
-    ans: 1,
-    fb: "Attackers leverage Gen AI to bypass traditional vulnerability analysis, lowering the barrier for entry and exponentially scaling phishing and ransomware."
-  },
-  {
-    q: "What challenge does the Middle Ring 2 (IoT/IoMT) threat present?",
-    opts: ["Insufficient encryption standards", "Millions of unmanaged endpoints with long lifespans and complex patching requirements", "Lack of vendor support contracts", "Incompatible network protocols"],
-    ans: 1,
-    fb: "The explosion of IoT/IoMT creates millions of unmanaged endpoints with long lifespans and complex patching requirements."
-  },
-
-  // ── GLOBAL MANDATES ──
-  {
-    q: "What penalty does GDPR impose for non-compliance?",
-    opts: ["Up to 2% of annual revenue", "Up to 4% of global turnover", "Fixed fine of €10 million", "Criminal prosecution of executives"],
-    ans: 1,
-    fb: "GDPR penalties can reach up to 4% of global turnover."
-  },
-  {
-    q: "What does DORA stand for?",
-    opts: ["Digital Operations Risk Act", "Data Oversight and Resilience Authority", "Digital Operational Resilience Act", "Distributed Operational Risk Assessment"],
-    ans: 2,
-    fb: "DORA stands for the Digital Operational Resilience Act, applicable to EU Financial entities."
-  },
-  {
-    q: "What does DORA require of EU financial institutions?",
-    opts: ["Annual penetration testing only", "Strict ICT third-party risk management and mandatory incident reporting", "CISO designation and board sign-off", "Quarterly financial audits"],
-    ans: 1,
-    fb: "DORA mandates strict ICT third-party risk management and mandatory incident reporting."
-  },
-  {
-    q: "What is the consequence of DORA non-compliance?",
-    opts: ["Reputational warnings only", "Fines up to 4% of turnover", "Severe fines and operational suspension", "Mandatory government oversight"],
-    ans: 2,
-    fb: "DORA penalties include severe fines and operational suspension."
-  },
-  {
-    q: "Which regulation governs NYDFS-regulated entities in the US?",
-    opts: ["HIPAA Part 500", "NYCRR Part 500", "SOC 2 Type II", "PCI DSS v4"],
-    ans: 1,
-    fb: "NYCRR Part 500 governs NYDFS-regulated entities in the United States."
-  },
-  {
-    q: "What is the breach reporting window required by NYCRR Part 500?",
-    opts: ["24 hours", "48 hours", "72 hours", "7 days"],
-    ans: 2,
-    fb: "NYCRR Part 500 requires 72-hour breach reporting."
-  },
-  {
-    q: "How much in total fines has NYCRR Part 500 levied since 2021?",
-    opts: ["Over $50 million", "Over $100 million", "Over $144 million", "Over $200 million"],
-    ans: 2,
-    fb: "Over $144 million in fines have been levied since 2021, including GEICO's $9.75M penalty."
-  },
-  {
-    q: "What key overarching principle does 'The Global Mandates' section emphasize?",
-    opts: ["Reactive incident response is sufficient for compliance", "Regulatory compliance requires demonstrable, documented evidence of proactive risk mitigation", "Self-certification is acceptable for all regulators", "Compliance is only required after a breach occurs"],
-    ans: 1,
-    fb: "The document states: 'Regulatory compliance requires demonstrable, documented evidence of proactive risk mitigation.'"
-  },
-
-  // ── BLUEPRINT OF TRUST ──
-  {
-    q: "In 'The Blueprint of Trust' pyramid, what sits at the very top?",
-    opts: ["The CIA Triad", "Top Management Approval", "Business Objectives", "Categorized Policies"],
-    ans: 2,
-    fb: "Business Objectives — the core operational goals of the enterprise — sit at the apex of the pyramid."
-  },
-  {
-    q: "What does the 'C' in the CIA Triad stand for?",
-    opts: ["Control", "Confidentiality", "Compliance", "Continuity"],
-    ans: 1,
-    fb: "The CIA Triad: Confidentiality (preventing unauthorized access), Integrity, and Availability."
-  },
-  {
-    q: "What does 'Integrity' mean in the context of the CIA Triad?",
-    opts: ["Ensuring data is always available", "Preventing unauthorized modification", "Encrypting data at rest", "Authenticating user identity"],
-    ans: 1,
-    fb: "Integrity in the CIA Triad means preventing unauthorized modification of data."
-  },
-  {
-    q: "What does 'Availability' mean in the CIA Triad?",
-    opts: ["Preventing unauthorized access", "Ensuring data cannot be modified", "Ensuring reliable access to systems and data", "Encrypting data in transit"],
-    ans: 2,
-    fb: "Availability means ensuring reliable access to systems and data."
-  },
-  {
-    q: "Which of the following is NOT one of the three categorized policy types in the Blueprint of Trust?",
-    opts: ["Enterprise Security Policy (ESP)", "Issue-Specific Policies (ISSP)", "Vendor Risk Policy (VRP)", "System-Specific Policies (SysSP)"],
-    ans: 2,
-    fb: "The three types are ESP, ISSP, and SysSP. Vendor Risk Policy is not listed."
-  },
-  {
-    q: "Why is Top Management Approval required for security policies?",
-    opts: ["It speeds up incident response", "Without formal C-Suite/Board sign-off, policies lack the authority required to be legally defensible", "It satisfies ISO 27001 automatically", "It replaces the need for external audits"],
-    ans: 1,
-    fb: "Without formal C-Suite/Board sign-off, policies lack the authority required to be legally defensible."
-  },
-
-  // ── LIVING RULEBOOK ──
-  {
-    q: "What is the correct order of the Policy Lifecycle stages?",
-    opts: ["Audit → Draft → Approve → Enforce → Communicate → Review", "Draft → Approve → Communicate → Enforce → Audit → Review & Update", "Communicate → Draft → Approve → Audit → Enforce → Review", "Approve → Draft → Communicate → Audit → Enforce → Review"],
-    ans: 1,
-    fb: "The correct lifecycle is: Draft → Approve → Communicate → Enforce → Audit → Review & Update."
-  },
-  {
-    q: "How often must policies be reviewed at minimum, according to the Living Rulebook?",
-    opts: ["Every two years", "Every six months", "At least annually", "Every quarter"],
-    ans: 2,
-    fb: "Policies must be reviewed at least annually, or immediately following significant technological changes or incidents."
-  },
-  {
-    q: "What technology is used for Strict Version Control of policies?",
-    opts: ["AES-256 encryption and cloud storage", "SHA-256 hash verification and immutable logging", "Blockchain distributed ledgers", "Digital signatures and PKI"],
-    ans: 1,
-    fb: "SHA-256 hash verification and immutable logging prove policies were not altered retroactively during a breach investigation."
-  },
-  {
-    q: "What does a 1:1 ratio of exceptions to violations indicate about a policy?",
-    opts: ["The policy is well-calibrated", "The policy needs more enforcement resources", "The policy is too rigid, encouraging staff to bypass controls", "The policy is too lenient"],
-    ans: 2,
-    fb: "A 1:1 ratio of exceptions to violations suggests a policy is too rigid, encouraging staff to bypass controls."
-  },
-  {
-    q: "What percentage of Stage 1 Audits fail due to lack of evidence surrounding policy approval and communication?",
-    opts: ["10%", "15%", "22%", "30%"],
-    ans: 2,
-    fb: "22% of Stage 1 Audits fail due to lack of evidence surrounding policy approval and communication."
-  },
-
-  // ── MAPPING THE TERRAIN ──
-  {
-    q: "What is Step 1 of the ITAM (IT Asset Management) process called?",
-    opts: ["Classification", "Dependency Mapping", "Inventory & Discovery", "The ITAM Lifecycle"],
-    ans: 2,
-    fb: "Step 1 is Inventory & Discovery — continuously detecting every physical device, software application, and data repository connected to the network."
-  },
-  {
-    q: "How are assets categorized in Step 2 (Classification) of the ITAM process?",
-    opts: ["By cost, age, and vendor", "By sensitivity: Mission Critical, Sensitive, Internal, Public", "By operating system and patch level", "By department and geographic location"],
-    ans: 1,
-    fb: "Assets are categorized based on sensitivity: Mission Critical, Sensitive, Internal, and Public."
-  },
-  {
-    q: "What is the purpose of Step 3 — Dependency Mapping?",
-    opts: ["Auditing software licenses", "Linking individual IT assets to Critical Business Functions to prioritize protection and recovery", "Mapping network topology for diagrams", "Identifying vendor dependencies for procurement"],
-    ans: 1,
-    fb: "Dependency Mapping links individual IT assets to Critical Business Functions to prioritize protection and recovery efforts."
-  },
-  {
-    q: "What does Step 4 — The ITAM Lifecycle — track?",
-    opts: ["An asset from Purchase Order to Invoice", "An asset from Procurement through Secure Disposal", "An asset's depreciation schedule", "An asset's vulnerability history"],
-    ans: 1,
-    fb: "The ITAM Lifecycle tracks an asset from Procurement through Secure Disposal."
-  },
-
-  // ── STANDARDS & GUARDRAILS ──
-  {
-    q: "What are the five functions of the NIST CSF 2.0 lifecycle?",
-    opts: ["Plan, Protect, Test, Respond, Recover", "Identify, Protect, Detect, Respond, Recover", "Assess, Mitigate, Monitor, Respond, Review", "Govern, Prevent, Detect, Contain, Recover"],
-    ans: 1,
-    fb: "NIST CSF 2.0 defines a functional lifecycle of: Identify, Protect, Detect, Respond, Recover."
-  },
-  {
-    q: "What is ISO 27001?",
-    opts: ["A standard for payment card data security", "A framework specifically for US federal agencies", "The global standard for an Information Security Management System (ISMS)", "A penetration testing methodology"],
-    ans: 2,
-    fb: "ISO 27001 is the global standard for an Information Security Management System (ISMS)."
-  },
-  {
-    q: "PCI DSS is described in the document as:",
-    opts: ["A voluntary framework for financial institutions", "Highly prescriptive operational standards for payment processing", "A European regulation for digital services", "A certification for cloud service providers"],
-    ans: 1,
-    fb: "PCI DSS provides highly prescriptive operational standards for payment processing."
-  },
-  {
-    q: "What is 'Policy-as-Code' (Automated Guardrails)?",
-    opts: ["Encrypting policy documents with AES-256", "Translating written policy into technical guardrails that are automatically enforced", "Publishing policies on the company intranet", "Hiring developers to enforce IT policies manually"],
-    ans: 1,
-    fb: "Policy-as-Code translates written policy into technical guardrails — e.g., CI/CD pipeline security scanning blocking hardcoded credentials."
-  },
-  {
-    q: "What example of automated enforcement is given in the Standards & Guardrails section?",
-    opts: ["Firewall rules blocking foreign IPs", "CI/CD pipeline security scanning automatically blocks code with hardcoded credentials; Identity platforms enforce Just-in-Time access", "Automated weekly vulnerability scans", "DLP tools monitoring email attachments"],
-    ans: 1,
-    fb: "The document cites CI/CD pipeline security scanning blocking hardcoded credentials and Identity platforms enforcing Just-in-Time access."
-  },
-  {
-    q: "Why can modern enforcement not rely on human memory, according to the document?",
-    opts: ["Humans are too expensive to train", "The volume of technical rules exceeds what any human can consistently apply — hence Policy-as-Code", "Memory is not legally admissible", "Regulators prohibit manual enforcement"],
-    ans: 1,
-    fb: "The document states: 'Modern enforcement cannot rely on human memory,' necessitating the translation of policy into automated technical guardrails."
-  },
-
-  // ── PROACTIVE SHIELD ──
-  {
-    q: "What is Layer 1 of The Proactive Shield called?",
-    opts: ["The Digital Perimeter", "The Human Firewall (Administrative Safeguards)", "The Network Boundary", "The Endpoint Defense"],
-    ans: 1,
-    fb: "Layer 1 is Administrative Safeguards, referred to as 'The Human Firewall.'"
-  },
-  {
-    q: "Which of the following is part of Layer 1 — Administrative Safeguards?",
-    opts: ["Intrusion Detection Systems", "Multi-Factor Authentication", "Security awareness training and Acceptable Use Policies", "Data encryption at rest"],
-    ans: 2,
-    fb: "Layer 1 includes security awareness training and Acceptable Use Policies with onboarding background checks."
-  },
-  {
-    q: "What does Layer 2 — Technical Safeguards — include?",
-    opts: ["Security training, background checks, and AUPs", "IDS/IPS, MFA, Role-Based Access Control, continuous patch management, and data encryption", "Policy drafting, approval workflows, and version control", "Incident response runbooks and tabletop exercises"],
-    ans: 1,
-    fb: "Layer 2 (The Digital Perimeter) includes IDS/IPS, MFA, RBAC, continuous patch management, and data encryption."
-  },
-  {
-    q: "What is the key financial argument made in The Proactive Shield section?",
-    opts: ["Security controls generate direct revenue", "Reactive incident response costs the same as prevention", "Proactive prevention is exponentially cheaper and less disruptive than reactive incident response", "Insurance covers most breach costs"],
-    ans: 2,
-    fb: "The document states: 'Proactive prevention is exponentially cheaper and less disruptive than reactive incident response.'"
-  },
-  {
-    q: "What does RBAC stand for?",
-    opts: ["Risk-Based Access Control", "Remote Backup and Configuration", "Role-Based Access Control", "Regulated Boundary Access Compliance"],
-    ans: 2,
-    fb: "RBAC stands for Role-Based Access Control, a key technical safeguard in Layer 2."
-  },
-
-  // ── ECONOMICS OF CYBER RISK ──
-  {
-    q: "What is the formula for Annual Loss Expectancy (ALE)?",
-    opts: ["SLE ÷ ARO", "SLE × ARO", "ARO + SLE", "SLE − Cost of Control"],
-    ans: 1,
-    fb: "ALE = Single Loss Expectancy (SLE) × Annual Rate of Occurrence (ARO)."
-  },
-  {
-    q: "When is a security control investment considered financially justified?",
-    opts: ["When it costs less than 10% of the IT budget", "When it is approved by the CISO", "When the cost of the control is less than the reduction in ALE", "When it satisfies at least two regulatory frameworks"],
-    ans: 2,
-    fb: "The decision rule: 'If the cost of the control is less than the reduction in ALE, the investment is justified.'"
-  },
-  {
-    q: "What does the Gordon-Loeb Model historically suggest about optimal security spend?",
-    opts: ["Security spend should match 100% of expected loss", "Security spend should not exceed ~37% of expected loss", "Security spend should be fixed at 10% of IT budget", "Security spend should exceed projected loss to ensure coverage"],
-    ans: 1,
-    fb: "The Gordon-Loeb Model historically suggests optimal security spend should not exceed ~37% of expected loss."
-  },
-  {
-    q: "What does CTI stand for in the Economics of Cyber Risk section?",
-    opts: ["Cyber Threat Integration", "Cyber Threat Intelligence", "Continuous Threat Inspection", "Controlled Threat Intervention"],
-    ans: 1,
-    fb: "CTI stands for Cyber Threat Intelligence."
-  },
-  {
-    q: "How does CTI function as a 'multiplier' in risk economics?",
-    opts: ["It increases the Annual Rate of Occurrence", "It drastically reduces Mean Time to Detect (MTTD) and Mean Time to Respond (MTTR), shrinking attacker dwell time", "It multiplies the cost of security controls", "It automatically patches vulnerabilities"],
-    ans: 1,
-    fb: "CTI acts as a multiplier by drastically reducing MTTD and MTTR, thereby shrinking the attacker's dwell time."
-  },
-  {
-    q: "What does TEF stand for in the economic risk model shown in the document?",
-    opts: ["Total Exposure Factor", "Threat Event Frequency", "Technology Enforcement Framework", "Tiered Exploitation Formula"],
-    ans: 1,
-    fb: "TEF stands for Threat Event Frequency, derived from Contact Frequency (CF) and Probability of Action (PoA)."
-  },
-
-  // ── VERIFYING THE POSTURE ──
-  {
-    q: "What is the focus of Internal Audits according to 'Verifying the Posture'?",
-    opts: ["Regulatory and legal survival", "Independent, unbiased verification", "Continuous, daily operational alignment", "Third-party penetration testing"],
-    ans: 2,
-    fb: "Internal Audits focus on continuous, daily operational alignment — spot-checking technical configurations against documented rules."
-  },
-  {
-    q: "What action do External Audits take?",
-    opts: ["Reviewing internal policy documentation", "Third-party penetration testing and vulnerability assessments to simulate real-world attacks", "Formal examinations by certified bodies like SOC 2", "Checking employee compliance training records"],
-    ans: 1,
-    fb: "External Audits involve third-party penetration testing and vulnerability assessments to simulate real-world attacks."
-  },
-  {
-    q: "Which certified bodies are mentioned in the Compliance Audits pillar?",
-    opts: ["NIST, ISO, and PCI", "SOC 2, ISO 27001, and NYDFS", "GDPR, HIPAA, and FISMA", "CIS, COBIT, and ITIL"],
-    ans: 1,
-    fb: "Compliance Audits involve formal examinations by certified bodies: SOC 2, ISO 27001, and NYDFS."
-  },
-  {
-    q: "What does the key quote from 'Verifying the Posture' state?",
-    opts: ["'Compliance is everyone's responsibility.'", "'If you can't measure it, you can't manage it.'", "'Trust, but verify. A policy without an audit trail is merely a suggestion.'", "'Security is a journey, not a destination.'"],
-    ans: 2,
-    fb: "The quoted principle is: 'Trust, but verify. A policy without an audit trail is merely a suggestion.'"
-  },
-
-  // ── INCIDENT RESPONSE ──
-  {
-    q: "What is Step 1 of the Incident Response Team (IRT) process?",
-    opts: ["Detection & Analysis", "Containment", "Preparation", "Eradication"],
-    ans: 2,
-    fb: "Step 1 is Preparation — establishing the IRT, building runbooks, and conducting tabletop exercises."
-  },
-  {
-    q: "What happens during the 'Containment' phase (Step 3) of incident response?",
-    opts: ["Malicious actors are removed from the network", "Systems are restored to normal operations", "Affected systems are isolated to prevent lateral movement", "Indicators of compromise are identified"],
-    ans: 2,
-    fb: "Containment involves isolating affected systems to prevent lateral movement."
-  },
-  {
-    q: "What is the purpose of the 'Lessons Learned' phase (Step 6)?",
-    opts: ["Billing and documentation for insurance claims", "Post-incident review to update policies and improve future defenses", "Notifying regulators of the breach", "Restoring systems to normal operations"],
-    ans: 1,
-    fb: "Lessons Learned is a post-incident review to update policies and improve future defenses."
-  },
-  {
-    q: "In what order do the 6 IRT phases occur?",
-    opts: ["Preparation → Containment → Detection → Eradication → Recovery → Lessons Learned", "Detection → Preparation → Containment → Eradication → Lessons Learned → Recovery", "Preparation → Detection & Analysis → Containment → Eradication → Recovery → Lessons Learned", "Containment → Detection → Preparation → Recovery → Eradication → Lessons Learned"],
-    ans: 2,
-    fb: "The correct 6-phase order is: Preparation → Detection & Analysis → Containment → Eradication → Recovery → Lessons Learned."
-  },
-
-  // ── BOUNCING BACK ──
-  {
-    q: "What does RPO (Recovery Point Objective) measure?",
-    opts: ["How fast systems must be restored", "The cost of a disaster event", "Tolerable data loss — 'How much historical data can we afford to lose?'", "The number of backup sites required"],
-    ans: 2,
-    fb: "RPO measures tolerable data loss and dictates the frequency of data backup and immutable storage strategies."
-  },
-  {
-    q: "What does RTO (Recovery Time Objective) measure?",
-    opts: ["Tolerable data loss", "Tolerable downtime — 'How fast must we be back online?'", "The financial cost of downtime per hour", "The number of recovery personnel required"],
-    ans: 1,
-    fb: "RTO measures tolerable downtime and dictates investments in redundant systems, active-active failovers, and cloud recovery."
-  },
-  {
-    q: "What does RPO dictate in practice?",
-    opts: ["Investments in active-active failovers", "Incident classification and reporting procedures", "The frequency of data backup programs and immutable storage strategies", "The number of data centers required"],
-    ans: 2,
-    fb: "RPO dictates the frequency of data backup programs and immutable storage strategies."
-  },
-  {
-    q: "How often must BCDR plans be tested according to 'Bouncing Back'?",
-    opts: ["Monthly", "Quarterly", "Annually", "Every two years"],
-    ans: 2,
-    fb: "Business Continuity and Disaster Recovery (BCDR) plans must be tested annually to guarantee RTO and RPO objectives are met."
-  },
-
-  // ── RESILIENCE ECOSYSTEM ──
-  {
-    q: "What does Ring 1 of The Resilience Ecosystem represent?",
-    opts: ["Operations & Prevention — The Walls", "Response & Recovery — The Safety Net", "Policies & Governance — The Blueprint", "Auditing & Legal Compliance — The Verification"],
-    ans: 2,
-    fb: "Ring 1 is Policies & Governance — The Blueprint — defining the rules, CIA triad, and C-Suite expectations."
-  },
-  {
-    q: "What technologies are associated with Ring 2 (Operations & Prevention)?",
-    opts: ["IRT playbooks, RTO/RPO, and BCDR", "ITAM, Zero Trust, MFA, and automated guardrails", "Independent audits, GDPR/NYDFS adherence, and ALE", "CIA Triad, ESPs, and C-Suite sign-off"],
-    ans: 1,
-    fb: "Ring 2 — The Walls — includes ITAM, Zero Trust, MFA, and automated guardrails blocking threats."
-  },
-  {
-    q: "What is the final closing principle of 'The Resilience Ecosystem'?",
-    opts: ["Cybersecurity is a necessary cost center for every enterprise", "Cybersecurity is not a cost center — it is an interconnected ecosystem of resilience that transforms operational risk into a strategic competitive advantage", "Cybersecurity investments must be minimized to preserve profitability", "Cybersecurity compliance alone is sufficient to prevent breaches"],
-    ans: 1,
-    fb: "The closing principle: 'Cybersecurity is not a cost center — it is an interconnected ecosystem of resilience that transforms operational risk into a strategic competitive advantage.'"
-  }
+const Q = [
+  {q:"According to the document, what is the 'Zero Trust Core' principle?",opts:["Always trust internal networks, verify external ones","Never trust, always verify — identity and access management must replace the obsolete network perimeter","Trust verified users completely once authenticated","Verify devices only, not users"],ans:1,fb:"The Zero Trust Core states: 'Never trust, always verify. Identity and access management must replace the obsolete network perimeter.'"},
+  {q:"In the threat landscape model, what does Outer Ring 1 represent?",opts:["IoT & Connected Devices","Ransomware networks","Artificial Intelligence used by attackers","Supply chain vulnerabilities"],ans:2,fb:"Outer Ring 1 is Artificial Intelligence — attackers leverage Gen AI to bypass traditional vulnerability analysis."},
+  {q:"How do attackers use Gen AI (e.g., Anthropic's Mythos model) according to the document?",opts:["To encrypt stolen data","To bypass traditional vulnerability analysis, lowering the barrier for entry and scaling phishing and ransomware","To automate patch deployment","To monitor network traffic"],ans:1,fb:"Attackers leverage Gen AI to bypass traditional vulnerability analysis, lowering the barrier for entry and exponentially scaling phishing and ransomware."},
+  {q:"What challenge does the Middle Ring 2 (IoT/IoMT) threat present?",opts:["Insufficient encryption standards","Millions of unmanaged endpoints with long lifespans and complex patching requirements","Lack of vendor support contracts","Incompatible network protocols"],ans:1,fb:"The explosion of IoT/IoMT creates millions of unmanaged endpoints with long lifespans and complex patching requirements."},
+  {q:"What penalty does GDPR impose for non-compliance?",opts:["Up to 2% of annual revenue","Up to 4% of global turnover","Fixed fine of €10 million","Criminal prosecution of executives"],ans:1,fb:"GDPR penalties can reach up to 4% of global turnover."},
+  {q:"What does DORA stand for?",opts:["Digital Operations Risk Act","Data Oversight and Resilience Authority","Digital Operational Resilience Act","Distributed Operational Risk Assessment"],ans:2,fb:"DORA stands for the Digital Operational Resilience Act, applicable to EU Financial entities."},
+  {q:"What does DORA require of EU financial institutions?",opts:["Annual penetration testing only","Strict ICT third-party risk management and mandatory incident reporting","CISO designation and board sign-off","Quarterly financial audits"],ans:1,fb:"DORA mandates strict ICT third-party risk management and mandatory incident reporting."},
+  {q:"What is the consequence of DORA non-compliance?",opts:["Reputational warnings only","Fines up to 4% of turnover","Severe fines and operational suspension","Mandatory government oversight"],ans:2,fb:"DORA penalties include severe fines and operational suspension."},
+  {q:"Which regulation governs NYDFS-regulated entities in the US?",opts:["HIPAA Part 500","NYCRR Part 500","SOC 2 Type II","PCI DSS v4"],ans:1,fb:"NYCRR Part 500 governs NYDFS-regulated entities in the United States."},
+  {q:"What is the breach reporting window required by NYCRR Part 500?",opts:["24 hours","48 hours","72 hours","7 days"],ans:2,fb:"NYCRR Part 500 requires 72-hour breach reporting."},
+  {q:"How much in total fines has NYCRR Part 500 levied since 2021?",opts:["Over $50 million","Over $100 million","Over $144 million","Over $200 million"],ans:2,fb:"Over $144 million in fines have been levied since 2021, including GEICO's $9.75M penalty."},
+  {q:"What key overarching principle does 'The Global Mandates' section emphasize?",opts:["Reactive incident response is sufficient for compliance","Regulatory compliance requires demonstrable, documented evidence of proactive risk mitigation","Self-certification is acceptable for all regulators","Compliance is only required after a breach occurs"],ans:1,fb:"The document states: 'Regulatory compliance requires demonstrable, documented evidence of proactive risk mitigation.'"},
+  {q:"In 'The Blueprint of Trust' pyramid, what sits at the very top?",opts:["The CIA Triad","Top Management Approval","Business Objectives","Categorized Policies"],ans:2,fb:"Business Objectives — the core operational goals of the enterprise — sit at the apex of the pyramid."},
+  {q:"What does the 'C' in the CIA Triad stand for?",opts:["Control","Confidentiality","Compliance","Continuity"],ans:1,fb:"The CIA Triad: Confidentiality (preventing unauthorized access), Integrity, and Availability."},
+  {q:"What does 'Integrity' mean in the context of the CIA Triad?",opts:["Ensuring data is always available","Preventing unauthorized modification","Encrypting data at rest","Authenticating user identity"],ans:1,fb:"Integrity in the CIA Triad means preventing unauthorized modification of data."},
+  {q:"What does 'Availability' mean in the CIA Triad?",opts:["Preventing unauthorized access","Ensuring data cannot be modified","Ensuring reliable access to systems and data","Encrypting data in transit"],ans:2,fb:"Availability means ensuring reliable access to systems and data."},
+  {q:"Which of the following is NOT one of the three categorized policy types?",opts:["Enterprise Security Policy (ESP)","Issue-Specific Policies (ISSP)","Vendor Risk Policy (VRP)","System-Specific Policies (SysSP)"],ans:2,fb:"The three types are ESP, ISSP, and SysSP. Vendor Risk Policy is not listed in the document."},
+  {q:"Why is Top Management Approval required for security policies?",opts:["It speeds up incident response","Without formal C-Suite/Board sign-off, policies lack the authority required to be legally defensible","It satisfies ISO 27001 automatically","It replaces the need for external audits"],ans:1,fb:"Without formal C-Suite/Board sign-off, policies lack the authority required to be legally defensible."},
+  {q:"What is the correct order of the Policy Lifecycle stages?",opts:["Audit → Draft → Approve → Enforce → Communicate → Review","Draft → Approve → Communicate → Enforce → Audit → Review & Update","Communicate → Draft → Approve → Audit → Enforce → Review","Approve → Draft → Communicate → Audit → Enforce → Review"],ans:1,fb:"The correct lifecycle is: Draft → Approve → Communicate → Enforce → Audit → Review & Update."},
+  {q:"How often must policies be reviewed at minimum?",opts:["Every two years","Every six months","At least annually","Every quarter"],ans:2,fb:"Policies must be reviewed at least annually, or immediately following significant technological changes or incidents."},
+  {q:"What technology is used for Strict Version Control of policies?",opts:["AES-256 encryption and cloud storage","SHA-256 hash verification and immutable logging","Blockchain distributed ledgers","Digital signatures and PKI"],ans:1,fb:"SHA-256 hash verification and immutable logging prove policies were not altered retroactively during a breach investigation."},
+  {q:"What does a 1:1 ratio of exceptions to violations indicate about a policy?",opts:["The policy is well-calibrated","The policy needs more enforcement resources","The policy is too rigid, encouraging staff to bypass controls","The policy is too lenient"],ans:2,fb:"A 1:1 ratio of exceptions to violations suggests a policy is too rigid, encouraging staff to bypass controls."},
+  {q:"What percentage of Stage 1 Audits fail due to lack of evidence surrounding policy approval and communication?",opts:["10%","15%","22%","30%"],ans:2,fb:"22% of Stage 1 Audits fail due to lack of evidence surrounding policy approval and communication."},
+  {q:"What is Step 1 of the ITAM (IT Asset Management) process?",opts:["Classification","Dependency Mapping","Inventory & Discovery","The ITAM Lifecycle"],ans:2,fb:"Step 1 is Inventory & Discovery — continuously detecting every physical device, software application, and data repository on the network."},
+  {q:"How are assets categorized in Step 2 (Classification) of the ITAM process?",opts:["By cost, age, and vendor","By sensitivity: Mission Critical, Sensitive, Internal, Public","By operating system and patch level","By department and geographic location"],ans:1,fb:"Assets are categorized based on sensitivity: Mission Critical, Sensitive, Internal, and Public."},
+  {q:"What is the purpose of Step 3 — Dependency Mapping?",opts:["Auditing software licenses","Linking individual IT assets to Critical Business Functions to prioritize protection and recovery","Mapping network topology for diagrams","Identifying vendor dependencies for procurement"],ans:1,fb:"Dependency Mapping links individual IT assets to Critical Business Functions to prioritize protection and recovery efforts."},
+  {q:"What does Step 4 — The ITAM Lifecycle — track?",opts:["An asset from Purchase Order to Invoice","An asset from Procurement through Secure Disposal","An asset's depreciation schedule","An asset's vulnerability history"],ans:1,fb:"The ITAM Lifecycle tracks an asset from Procurement through Secure Disposal."},
+  {q:"What are the five functions of the NIST CSF 2.0 lifecycle?",opts:["Plan, Protect, Test, Respond, Recover","Identify, Protect, Detect, Respond, Recover","Assess, Mitigate, Monitor, Respond, Review","Govern, Prevent, Detect, Contain, Recover"],ans:1,fb:"NIST CSF 2.0 defines: Identify, Protect, Detect, Respond, Recover."},
+  {q:"What is ISO 27001?",opts:["A standard for payment card data security","A framework specifically for US federal agencies","The global standard for an Information Security Management System (ISMS)","A penetration testing methodology"],ans:2,fb:"ISO 27001 is the global standard for an Information Security Management System (ISMS)."},
+  {q:"PCI DSS is described in the document as:",opts:["A voluntary framework for financial institutions","Highly prescriptive operational standards for payment processing","A European regulation for digital services","A certification for cloud service providers"],ans:1,fb:"PCI DSS provides highly prescriptive operational standards for payment processing."},
+  {q:"What is 'Policy-as-Code' (Automated Guardrails)?",opts:["Encrypting policy documents with AES-256","Translating written policy into technical guardrails that are automatically enforced","Publishing policies on the company intranet","Hiring developers to enforce IT policies manually"],ans:1,fb:"Policy-as-Code translates written policy into technical guardrails — e.g., CI/CD pipeline security scanning blocking hardcoded credentials."},
+  {q:"What example of automated enforcement is cited in Standards & Guardrails?",opts:["Firewall rules blocking foreign IPs","CI/CD pipeline security scanning automatically blocks code with hardcoded credentials; Identity platforms enforce Just-in-Time access","Automated weekly vulnerability scans","DLP tools monitoring email attachments"],ans:1,fb:"The document cites CI/CD pipeline security scanning and Identity platforms enforcing Just-in-Time access as automated guardrail examples."},
+  {q:"What is Layer 1 of The Proactive Shield called?",opts:["The Digital Perimeter","The Human Firewall (Administrative Safeguards)","The Network Boundary","The Endpoint Defense"],ans:1,fb:"Layer 1 is Administrative Safeguards, referred to as 'The Human Firewall.'"},
+  {q:"Which of the following is part of Layer 1 — Administrative Safeguards?",opts:["Intrusion Detection Systems","Multi-Factor Authentication","Security awareness training and Acceptable Use Policies","Data encryption at rest"],ans:2,fb:"Layer 1 includes security awareness training and Acceptable Use Policies with onboarding background checks."},
+  {q:"What does Layer 2 — Technical Safeguards — include?",opts:["Security training, background checks, and AUPs","IDS/IPS, MFA, Role-Based Access Control, continuous patch management, and data encryption","Policy drafting, approval workflows, and version control","Incident response runbooks and tabletop exercises"],ans:1,fb:"Layer 2 (The Digital Perimeter) includes IDS/IPS, MFA, RBAC, continuous patch management, and data encryption."},
+  {q:"What is the key financial argument made in The Proactive Shield section?",opts:["Security controls generate direct revenue","Reactive incident response costs the same as prevention","Proactive prevention is exponentially cheaper and less disruptive than reactive incident response","Insurance covers most breach costs"],ans:2,fb:"'Proactive prevention is exponentially cheaper and less disruptive than reactive incident response.'"},
+  {q:"What does RBAC stand for?",opts:["Risk-Based Access Control","Remote Backup and Configuration","Role-Based Access Control","Regulated Boundary Access Compliance"],ans:2,fb:"RBAC stands for Role-Based Access Control, a key technical safeguard in Layer 2."},
+  {q:"What is the formula for Annual Loss Expectancy (ALE)?",opts:["SLE ÷ ARO","SLE × ARO","ARO + SLE","SLE − Cost of Control"],ans:1,fb:"ALE = Single Loss Expectancy (SLE) × Annual Rate of Occurrence (ARO)."},
+  {q:"When is a security control investment considered financially justified?",opts:["When it costs less than 10% of the IT budget","When it is approved by the CISO","When the cost of the control is less than the reduction in ALE","When it satisfies at least two regulatory frameworks"],ans:2,fb:"'If the cost of the control is less than the reduction in ALE, the investment is justified.'"},
+  {q:"What does the Gordon-Loeb Model suggest about optimal security spend?",opts:["Security spend should match 100% of expected loss","Security spend should not exceed ~37% of expected loss","Security spend should be fixed at 10% of IT budget","Security spend should exceed projected loss"],ans:1,fb:"The Gordon-Loeb Model historically suggests optimal security spend should not exceed ~37% of expected loss."},
+  {q:"What does CTI stand for?",opts:["Cyber Threat Integration","Cyber Threat Intelligence","Continuous Threat Inspection","Controlled Threat Intervention"],ans:1,fb:"CTI stands for Cyber Threat Intelligence."},
+  {q:"How does CTI function as a 'multiplier' in risk economics?",opts:["It increases the Annual Rate of Occurrence","It drastically reduces MTTD and MTTR, shrinking attacker dwell time","It multiplies the cost of security controls","It automatically patches vulnerabilities"],ans:1,fb:"CTI acts as a multiplier by drastically reducing Mean Time to Detect (MTTD) and Mean Time to Respond (MTTR), shrinking the attacker's dwell time."},
+  {q:"What is the focus of Internal Audits?",opts:["Regulatory and legal survival","Independent, unbiased verification","Continuous, daily operational alignment","Third-party penetration testing"],ans:2,fb:"Internal Audits focus on continuous, daily operational alignment — spot-checking technical configurations against documented rules."},
+  {q:"What action do External Audits take?",opts:["Reviewing internal policy documentation","Third-party penetration testing and vulnerability assessments to simulate real-world attacks","Formal examinations by certified bodies like SOC 2","Checking employee compliance training records"],ans:1,fb:"External Audits involve third-party penetration testing and vulnerability assessments to simulate real-world attacks."},
+  {q:"Which certified bodies are mentioned for Compliance Audits?",opts:["NIST, ISO, and PCI","SOC 2, ISO 27001, and NYDFS","GDPR, HIPAA, and FISMA","CIS, COBIT, and ITIL"],ans:1,fb:"Compliance Audits involve formal examinations by certified bodies: SOC 2, ISO 27001, and NYDFS."},
+  {q:"What does the key quote from 'Verifying the Posture' state?",opts:["'Compliance is everyone's responsibility.'","'If you can't measure it, you can't manage it.'","'Trust, but verify. A policy without an audit trail is merely a suggestion.'","'Security is a journey, not a destination.'"],ans:2,fb:"The principle is: 'Trust, but verify. A policy without an audit trail is merely a suggestion.'"},
+  {q:"What is Step 1 of the Incident Response Team (IRT) process?",opts:["Detection & Analysis","Containment","Preparation","Eradication"],ans:2,fb:"Step 1 is Preparation — establishing the IRT, building runbooks, and conducting tabletop exercises."},
+  {q:"What happens during the 'Containment' phase (Step 3) of incident response?",opts:["Malicious actors are removed from the network","Systems are restored to normal operations","Affected systems are isolated to prevent lateral movement","Indicators of compromise are identified"],ans:2,fb:"Containment involves isolating affected systems to prevent lateral movement."},
+  {q:"What does RPO (Recovery Point Objective) measure?",opts:["How fast systems must be restored","The cost of a disaster event","Tolerable data loss — 'How much historical data can we afford to lose?'","The number of backup sites required"],ans:2,fb:"RPO measures tolerable data loss and dictates the frequency of data backup and immutable storage strategies."},
+  {q:"What does RTO (Recovery Time Objective) measure?",opts:["Tolerable data loss","Tolerable downtime — 'How fast must we be back online?'","The financial cost of downtime per hour","The number of recovery personnel required"],ans:1,fb:"RTO measures tolerable downtime and dictates investments in redundant systems, active-active failovers, and cloud recovery."},
+  {q:"What is the final closing principle of 'The Resilience Ecosystem'?",opts:["Cybersecurity is a necessary cost center for every enterprise","Cybersecurity is not a cost center — it is an interconnected ecosystem of resilience that transforms operational risk into a strategic competitive advantage","Cybersecurity investments must be minimized to preserve profitability","Cybersecurity compliance alone is sufficient to prevent breaches"],ans:1,fb:"'Cybersecurity is not a cost center — it is an interconnected ecosystem of resilience that transforms operational risk into a strategic competitive advantage.'"}
 ];
 
-let answered = new Array(questions.length).fill(null);
-let submitted = false;
+const LETTERS = ['A','B','C','D'];
+let currentIdx = 0;
+let score = 0;
+let totalAnswered = 0;
 
-function buildQuiz() {
-  const container = document.getElementById('quizBody');
-  const submitWrap = container.querySelector('.submit-wrap');
+function buildCards() {
+  const body = document.getElementById('quizBody');
   const results = document.getElementById('results');
-
-  questions.forEach((item, i) => {
+  Q.forEach((item, i) => {
     const card = document.createElement('div');
-    card.className = 'q-card';
+    card.className = 'q-card' + (i === 0 ? ' active' : '');
     card.id = `card-${i}`;
-    card.style.animationDelay = `${i * 0.015}s`;
 
-    const letters = ['A', 'B', 'C', 'D'];
     const optsHtml = item.opts.map((opt, j) => `
-      <div class="option" id="opt-${i}-${j}" onclick="selectOption(${i}, ${j})">
-        <span class="opt-letter">${letters[j]}</span>
+      <div class="option" id="opt-${i}-${j}" onclick="choose(${i},${j})">
+        <span class="opt-letter">${LETTERS[j]}</span>
         <span class="opt-text">${opt}</span>
+        <span class="opt-icon" id="icon-${i}-${j}"></span>
       </div>`).join('');
 
+    const isLast = i === Q.length - 1;
     card.innerHTML = `
-      <div class="q-num">Question ${i + 1} of ${questions.length}</div>
+      <div class="q-meta">
+        <span class="q-num">Question ${i+1} of ${Q.length}</span>
+        <span class="q-status" id="status-${i}"></span>
+      </div>
       <div class="q-text">${item.q}</div>
       <div class="options">${optsHtml}</div>
       <div class="feedback" id="fb-${i}"></div>
-    `;
-
-    container.insertBefore(card, submitWrap);
+      <div class="next-wrap" id="next-${i}">
+        <button class="btn-next" onclick="${isLast ? 'showResults()' : `nextQ(${i})`}">
+          ${isLast ? 'See Results →' : 'Next Question →'}
+        </button>
+      </div>`;
+    body.insertBefore(card, results);
   });
 }
 
-function selectOption(qIdx, optIdx) {
-  if (submitted) return;
-  answered[qIdx] = optIdx;
+function choose(qIdx, optIdx) {
+  const card = document.getElementById(`card-${qIdx}`);
+  if (card.dataset.done) return;
+  card.dataset.done = '1';
 
-  const opts = document.querySelectorAll(`[id^="opt-${qIdx}-"]`);
-  opts.forEach(o => o.classList.remove('selected'));
-  document.getElementById(`opt-${qIdx}-${optIdx}`).classList.add('selected');
+  const item = Q[qIdx];
+  const isCorrect = optIdx === item.ans;
 
-  updateProgress();
-}
-
-function updateProgress() {
-  const count = answered.filter(a => a !== null).length;
-  const pct = (count / questions.length) * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressLabel').textContent = `${count} / ${questions.length} answered`;
-
-  const correctSoFar = answered.reduce((acc, a, i) => (a !== null && a === questions[i].ans) ? acc + 1 : acc, 0);
-  document.getElementById('scoreLive').textContent = `Score: ${correctSoFar}`;
-
-  document.getElementById('submitBtn').disabled = count < questions.length;
-}
-
-function submitQuiz() {
-  if (submitted) return;
-  submitted = true;
-  document.getElementById('submitBtn').disabled = true;
-
-  let correct = 0;
-  questions.forEach((item, i) => {
-    const userAns = answered[i];
-    const card = document.getElementById(`card-${i}`);
-    const fb = document.getElementById(`fb-${i}`);
-    const opts = document.querySelectorAll(`[id^="opt-${i}-"]`);
-
-    opts.forEach(o => o.classList.add('locked'));
-
-    if (userAns === item.ans) {
-      correct++;
-      opts[userAns].classList.remove('selected');
-      opts[userAns].classList.add('correct');
-      card.classList.add('answered-correct');
-      fb.textContent = '✓ Correct! ' + item.fb;
-      fb.className = 'feedback show fb-correct';
-    } else {
-      opts[userAns].classList.remove('selected');
-      opts[userAns].classList.add('wrong');
-      opts[item.ans].classList.add('reveal-correct');
-      card.classList.add('answered-wrong');
-      fb.textContent = '✗ Incorrect. ' + item.fb;
-      fb.className = 'feedback show fb-wrong';
+  // lock & style all options
+  Q[qIdx].opts.forEach((_, j) => {
+    const o = document.getElementById(`opt-${qIdx}-${j}`);
+    o.classList.add('locked');
+    if (j === item.ans) {
+      o.classList.add('opt-correct');
+      document.getElementById(`icon-${qIdx}-${j}`).textContent = '✓';
+    } else if (j === optIdx && !isCorrect) {
+      o.classList.add('opt-wrong');
+      document.getElementById(`icon-${qIdx}-${j}`).textContent = '✗';
     }
   });
 
-  showResults(correct);
+  const statusEl = document.getElementById(`status-${qIdx}`);
+  if (isCorrect) {
+    card.classList.add('state-correct');
+    statusEl.textContent = '✓ Correct';
+    statusEl.className = 'q-status show correct-tag';
+    score++;
+  } else {
+    card.classList.add('state-wrong');
+    statusEl.textContent = '✗ Incorrect';
+    statusEl.className = 'q-status show wrong-tag';
+  }
+
+  const fb = document.getElementById(`fb-${qIdx}`);
+  fb.innerHTML = `<strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${item.fb}`;
+  fb.className = `feedback show ${isCorrect ? 'fb-correct' : 'fb-wrong'}`;
+
+  document.getElementById(`next-${qIdx}`).classList.add('show');
+
+  totalAnswered++;
+  updateHUD(qIdx);
 }
 
-function showResults(score) {
-  const pct = Math.round((score / questions.length) * 100);
-  let grade, msg;
+function nextQ(idx) {
+  document.getElementById(`card-${idx}`).classList.remove('active');
+  currentIdx = idx + 1;
+  const next = document.getElementById(`card-${currentIdx}`);
+  if (next) {
+    next.classList.add('active');
+    setTimeout(() => next.scrollIntoView({ behavior:'smooth', block:'start' }), 60);
+  }
+  updateHUD(currentIdx);
+}
 
-  if (pct >= 90)      { grade = 'Outstanding — Mastery'; msg = 'Exceptional command of cybersecurity governance, risk management, and operational continuity. You are ready for professional application.'; }
-  else if (pct >= 80) { grade = 'Proficient'; msg = 'Strong understanding of the core frameworks and principles. Review the questions you missed to solidify your knowledge.'; }
-  else if (pct >= 70) { grade = 'Developing'; msg = 'Good foundation, but some key concepts need reinforcement. Revisit the Living Rulebook, Economics of Risk, and Incident Response sections.'; }
-  else if (pct >= 60) { grade = 'Needs Review'; msg = 'Several critical areas require attention. Re-read the study notes and focus on regulations, CIA triad, and the ITAM process.'; }
-  else                { grade = 'Requires Restudy'; msg = 'The material requires thorough review. Begin with the Global Mandates and Blueprint of Trust sections before retaking the quiz.'; }
+function updateHUD(idx) {
+  const pct = (totalAnswered / Q.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Question ${(idx !== undefined ? idx : currentIdx) + 1} of ${Q.length}`;
+  document.getElementById('scoreLive').textContent = `Score: ${score} / ${totalAnswered}`;
+}
+
+function showResults() {
+  document.querySelector('.q-card.active')?.classList.remove('active');
+  const pct = Math.round((score / Q.length) * 100);
+  let grade, msg;
+  if      (pct >= 90) { grade='Outstanding — Mastery';  msg='Exceptional command of cybersecurity governance, risk management, and operational continuity. You are ready for professional application.'; }
+  else if (pct >= 80) { grade='Proficient';             msg='Strong understanding of the core frameworks. Review the questions you missed to solidify your knowledge.'; }
+  else if (pct >= 70) { grade='Developing';             msg='Good foundation, but some key concepts need reinforcement. Revisit the Living Rulebook, Risk Economics, and Incident Response sections.'; }
+  else if (pct >= 60) { grade='Needs Review';           msg='Several critical areas require attention. Re-read the study notes and focus on regulations, the CIA triad, and the ITAM process.'; }
+  else                { grade='Requires Restudy';       msg='The material requires thorough review. Begin with the Global Mandates and Blueprint of Trust sections before retaking the quiz.'; }
 
   document.getElementById('finalScore').textContent = score;
-  document.getElementById('gradeBadge').textContent = grade;
+  document.getElementById('gradeBadge').textContent = `${grade} · ${pct}%`;
   document.getElementById('resultMessage').textContent = msg;
-  document.getElementById('results').style.display = 'block';
-
+  document.getElementById('progressLabel').textContent = `${Q.length} / ${Q.length} answered`;
+  document.getElementById('scoreLive').textContent = `Final: ${score} / ${Q.length} (${pct}%)`;
   document.getElementById('progressFill').style.width = '100%';
-  document.getElementById('progressLabel').textContent = `${questions.length} / ${questions.length} answered`;
-  document.getElementById('scoreLive').textContent = `Final Score: ${score} / ${questions.length} (${pct}%)`;
 
-  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  const res = document.getElementById('results');
+  res.style.display = 'block';
+  setTimeout(() => res.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
 }
 
 function restartQuiz() {
-  answered = new Array(questions.length).fill(null);
-  submitted = false;
-  document.getElementById('quizBody').querySelectorAll('.q-card').forEach(c => c.remove());
+  score = 0; totalAnswered = 0; currentIdx = 0;
+  document.querySelectorAll('.q-card').forEach(c => c.remove());
   document.getElementById('results').style.display = 'none';
-  document.getElementById('submitBtn').disabled = true;
   document.getElementById('progressFill').style.width = '0%';
-  document.getElementById('progressLabel').textContent = `0 / ${questions.length} answered`;
-  document.getElementById('scoreLive').textContent = 'Score: 0';
-  buildQuiz();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('progressLabel').textContent = 'Question 1 of 50';
+  document.getElementById('scoreLive').textContent = 'Score: 0 / 0';
+  buildCards();
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
-buildQuiz();
+buildCards();
 </script>
 </body>
 </html>
