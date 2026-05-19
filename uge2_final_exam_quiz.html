@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGE2 Final Examination — Part 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --paper: #fdfaf4;
+    --ink: #1a1410;
+    --ink-light: #5a4f42;
+    --accent: #8b2e2e;
+    --accent-soft: #c4634a;
+    --gold: #b8860b;
+    --correct: #2d6a4f;
+    --correct-bg: #d8f3dc;
+    --wrong: #8b2e2e;
+    --wrong-bg: #ffe0e0;
+    --neutral-bg: #ede8df;
+    --border: #c8bfb0;
+    --shadow: rgba(26,20,16,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* Header */
+  .exam-header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 40px 40px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .exam-header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      45deg, transparent, transparent 20px,
+      rgba(255,255,255,0.015) 20px, rgba(255,255,255,0.015) 40px
+    );
+    pointer-events: none;
+  }
+  .header-meta {
+    display: flex; flex-wrap: wrap; gap: 8px 32px;
+    font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #c8bfb0; margin-bottom: 18px;
+  }
+  .header-meta span { opacity: 0.85; }
+  .header-meta strong { color: var(--bg); }
+  .exam-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .exam-subtitle {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #c8bfb0;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  /* Score bar */
+  .score-bar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex; align-items: center; gap: 24px;
+    flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+  .score-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-light); }
+  .score-val { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--accent); font-weight: 700; }
+  .progress-wrap { flex: 1; min-width: 140px; }
+  .progress-track { height: 6px; background: var(--neutral-bg); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+  .btn-submit {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    border: none; cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.88rem; font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 10px 28px;
+    border-radius: 4px;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-submit:hover { background: var(--accent-soft); transform: translateY(-1px); }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* Instruction */
+  .instructions {
+    max-width: 860px; margin: 36px auto 0; padding: 0 32px;
+    font-size: 0.9rem; color: var(--ink-light); font-style: italic;
+    border-left: 3px solid var(--gold);
+    padding-left: 20px;
+    line-height: 1.7;
+  }
+
+  /* Questions */
+  .questions-wrap { max-width: 860px; margin: 0 auto; padding: 32px 32px 0; }
+
+  .question-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .question-card:hover { box-shadow: 0 4px 16px var(--shadow); }
+
+  .q-number-row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--neutral-bg);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .q-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--accent);
+    min-width: 28px;
+  }
+  .q-status { margin-left: auto; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-light); }
+
+  .q-body { padding: 18px 20px 8px; }
+  .q-text {
+    font-size: 0.95rem; line-height: 1.75;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  .choices { list-style: none; display: flex; flex-direction: column; gap: 8px; padding: 0 0 16px; }
+  .choice-label {
+    display: flex; align-items: flex-start; gap: 12px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.91rem; line-height: 1.55;
+  }
+  .choice-label:hover { border-color: var(--accent-soft); background: #fef6f0; }
+
+  input[type="radio"] { display: none; }
+  input[type="radio"]:checked + .choice-label {
+    border-color: var(--accent);
+    background: #fbede8;
+  }
+
+  .choice-letter {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-size: 0.82rem;
+    color: var(--accent);
+    min-width: 18px;
+    padding-top: 1px;
+  }
+
+  /* Feedback states */
+  .choice-label.correct {
+    border-color: var(--correct) !important;
+    background: var(--correct-bg) !important;
+    color: var(--correct);
+  }
+  .choice-label.correct .choice-letter { color: var(--correct); }
+  .choice-label.wrong {
+    border-color: var(--wrong) !important;
+    background: var(--wrong-bg) !important;
+    color: var(--wrong);
+  }
+  .choice-label.wrong .choice-letter { color: var(--wrong); }
+  .choice-label.reveal-correct {
+    border-color: var(--correct) !important;
+    background: var(--correct-bg) !important;
+    color: var(--correct);
+  }
+
+  /* Results modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,20,16,0.65); backdrop-filter: blur(4px);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 48px 44px;
+    max-width: 480px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+    animation: popIn 0.35s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+  .modal-grade {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem; font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .modal-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-light); margin-top: 4px; }
+  .modal-fraction { font-size: 1.4rem; margin-top: 12px; color: var(--ink-light); }
+  .modal-msg { margin-top: 18px; font-size: 1rem; line-height: 1.65; color: var(--ink); font-style: italic; }
+  .modal-close {
+    margin-top: 28px;
+    background: var(--ink); color: var(--bg);
+    border: none; cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.9rem; padding: 12px 32px;
+    border-radius: 4px; letter-spacing: 0.05em;
+    transition: background 0.2s;
+  }
+  .modal-close:hover { background: var(--accent); }
+
+  @media (max-width: 600px) {
+    .exam-header { padding: 28px 20px 24px; }
+    .score-bar { padding: 12px 16px; gap: 14px; }
+    .instructions, .questions-wrap { padding-left: 16px; padding-right: 16px; }
+    .q-body { padding: 14px 14px 6px; }
+    .choice-label { padding: 8px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="exam-header">
+  <div class="header-meta">
+    <span>Course: <strong>UGE2</strong></span>
+    <span>College: <strong>CASE</strong></span>
+    <span>S.Y.: <strong>2024–2025</strong></span>
+    <span>Exam Date: <strong>2025-03-15</strong></span>
+    <span>Total Points: <strong>100</strong></span>
+  </div>
+  <h1 class="exam-title">Final Examination<br>Part 1</h1>
+  <p class="exam-subtitle">Term / Semester: 1st / 2nd &nbsp;·&nbsp; Multiple Choice</p>
+</header>
+
+<div class="score-bar">
+  <div>
+    <div class="score-label">Score</div>
+    <div class="score-val" id="live-score">—</div>
+  </div>
+  <div>
+    <div class="score-label">Answered</div>
+    <div class="score-val" id="live-answered">0 / 54</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="score-label" style="margin-bottom:6px;">Progress</div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+  </div>
+  <button class="btn-submit" onclick="submitQuiz()">Submit Exam</button>
+</div>
+
+<p class="instructions">
+  Read each question carefully and choose the correct answer. Shade the circle corresponding to the letter of your choice.
+</p>
+
+<div class="questions-wrap" id="quiz-form"></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-grade" id="m-pct">—</div>
+    <div class="modal-label">Final Score</div>
+    <div class="modal-fraction" id="m-frac"></div>
+    <div class="modal-msg" id="m-msg"></div>
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('show')">Review Answers</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    n: 1,
+    q: "Your proposal must include examples of past successful projects. What is the best way to present this information?",
+    choices: [
+      "List all past projects without details",
+      "Highlight a few relevant projects with detailed case studies",
+      "Mention only the projects with no issues",
+      "Provide testimonials from unrelated projects"
+    ],
+    answer: 1
+  },
+  {
+    n: 2,
+    q: "Alex is sending a formal proposal letter to a new client. Which complimentary closing is the most appropriate for this type of letter?",
+    choices: ["Yours truly,", "Cheers,", "All the best,", "Thanks a lot,"],
+    answer: 0
+  },
+  {
+    n: 3,
+    q: "You are preparing a business letter to send to a partner company. The letter is dated July 15, 2024. Which of the following is the correct way to write the dateline in the letter?",
+    choices: ["July 15th, 2024", "15/07/2024", "15 July 2024", "07-15-2024"],
+    answer: 2
+  },
+  {
+    n: 4,
+    q: "Your XYZ Health & Wellness Company is exploring the possibility of launching a luxury product line. During the feasibility analysis, the company discovers that while there is a potential market for the product, the current brand customer base is primarily focused on budget-friendly options. How should your feasibility report address this finding?",
+    choices: [
+      "Recommend launching the luxury product line to tap into the niche market.",
+      "Highlight the risk of alienating the current customer base.",
+      "Suggest a gradual introduction of the luxury line alongside the budget products.",
+      "Advise against launching the luxury product line due to the existing customer base."
+    ],
+    answer: 1
+  },
+  {
+    n: 5,
+    q: "While preparing a feasibility report for a new retail store location, Mr. Octavia discovers that the local market is saturated with similar stores. However, his brand has a strong reputation and a loyal customer base. Which aspect should be emphasized in the feasibility report?",
+    choices: [
+      "The saturation of the local market and potential risks",
+      "The strong brand reputation and loyal customer base",
+      "The financial projections based on average market performance",
+      "The potential for negotiating lower lease rates due to market saturation"
+    ],
+    answer: 1
+  },
+  {
+    n: 6,
+    q: "You are a project manager at a digital company. Your team is considering developing a new software product. Before proceeding, your CEO asks for a feasibility report. What should be the primary focus in the report?",
+    choices: [
+      "Identifying the best marketing strategies for the software",
+      "Estimating the potential profits from the software",
+      "Assessing whether the project can be completed with available resources",
+      "Writing the user manual for the software"
+    ],
+    answer: 2
+  },
+  {
+    n: 7,
+    q: "You are writing a proposal for a new software development project. During a meeting, a stakeholder asks for a specific feature not initially included. How should you respond in your proposal?",
+    choices: [
+      "Add the feature without further discussion",
+      "Promise to include the feature and adjust the timeline later",
+      "Analyze the feasibility of the feature and provide an updated proposal",
+      "Ignore the request and stick to the original plan"
+    ],
+    answer: 2
+  },
+  {
+    n: 8,
+    q: "While writing a troubleshooting guide for a complex software system, you notice that some error messages are unclear and unhelpful. How would you approach this to improve the quality of the guide?",
+    choices: [
+      "Suggest to the development team that they improve the clarity of the error messages, and in the meantime, provide additional context in the guide for each error.",
+      "Write the troubleshooting steps exactly as provided, without addressing the unclear error messages.",
+      "Create placeholder content for the unclear error messages and wait for the development team to update them.",
+      "Remove the error messages from the guide entirely to avoid confusion."
+    ],
+    answer: 0
+  },
+  {
+    n: 9,
+    q: "A tech startup company is evaluating the feasibility of developing an innovative mobile app. The feasibility report must consider market demand, development costs, and legal considerations. It was found that while the app idea is unique, there are complex privacy regulations that could delay its launch. What should be the focus of its feasibility report?",
+    choices: [
+      "The uniqueness of the app idea and its market potential",
+      "The development costs and potential ROI",
+      "The legal considerations and their impact on the project timeline",
+      "The potential competition in the app market"
+    ],
+    answer: 2
+  },
+  {
+    n: 10,
+    q: "The client requests a proposal for a highly technical project but lacks technical expertise. How should you structure your proposal?",
+    choices: [
+      "Use extensive technical jargon to demonstrate expertise",
+      "Simplify technical details and provide clear explanations",
+      "Focus solely on the financial aspects",
+      "Include a glossary of technical terms without simplification"
+    ],
+    answer: 1
+  },
+  {
+    n: 11,
+    q: "Moly is preparing a presentation to update his team on a new project initiative. Moly wants to ensure that his communication is clear and compelling and that it reaches everyone in the team. Which of the following should Moly avoid to ensure his communication is successful?",
+    choices: [
+      "Objective of communication",
+      "Inadequate medium",
+      "Clarity",
+      "Adequate medium"
+    ],
+    answer: 1
+  },
+  {
+    n: 12,
+    q: "Shad is a laboratory technician responsible for analyzing test results and interpreting data from various experiments. Which technical skill would be most crucial for ensuring accurate and reliable results in his work?",
+    choices: [
+      "Graphic design",
+      "Data analysis",
+      "Conflict resolution",
+      "Creativity"
+    ],
+    answer: 1
+  },
+  {
+    n: 13,
+    q: "Ethan is writing a letter to thank a client for their business. Which of the following is the most effective way to close the letter?",
+    choices: [
+      '"Thank you for your time and consideration."',
+      '"We appreciate your business and look forward to continuing our partnership."',
+      '"Thank you for your prompt response to our inquiry."',
+      '"We are grateful for your feedback and suggestions."'
+    ],
+    answer: 1
+  },
+  {
+    n: 14,
+    q: "NEB Company, a manufacturing company, is exploring the feasibility of automating its production line. The feasibility report reveals that automation could significantly reduce long-term costs but requires a substantial upfront investment and could lead to workforce reductions. Which of the following should the feasibility report emphasize?",
+    choices: [
+      "The long-term cost savings from automation",
+      "The substantial upfront investment required",
+      "The potential impact on the current workforce",
+      "All of the above"
+    ],
+    answer: 3
+  },
+  {
+    n: 15,
+    q: "Technical writing is focused on delivering clear, objective, and factual information. Which of these must be avoided in technical writing?",
+    choices: ["Facts", "Grammar", "Personal feelings", "Punctuation"],
+    answer: 2
+  },
+  {
+    n: 16,
+    q: "As a data entry specialist, you frequently use Microsoft Excel to input and organize large volumes of data. Your ability to create formulas and manage spreadsheets efficiently is crucial to your role. What type of skill does your proficiency in Excel most directly reflect?",
+    choices: [
+      "Technical skill",
+      "Time management skill",
+      "Leadership skill",
+      "Analytical skill"
+    ],
+    answer: 0
+  },
+  {
+    n: 17,
+    q: "Your company is considering launching a new product that requires significant R&D investment. Your feasibility report must include a risk assessment. During your analysis, you identify a high risk of technological failure; but the market potential is immense if the technology succeeds. What should your report recommend?",
+    choices: [
+      "Proceed with the project despite the high risk, given the potential rewards.",
+      "Abandon the project due to the high risk of technological failure.",
+      "Suggest a phased approach to the project, with initial small-scale testing to mitigate risk.",
+      "Look for alternative technologies that might reduce the risk."
+    ],
+    answer: 2
+  },
+  {
+    n: 18,
+    q: "May is a network administrator responsible for setting up and configuring a new network for a growing organization. May must address configuration issues, ensure proper connectivity, and resolve technical difficulties. Which skill is most important for completing these tasks?",
+    choices: [
+      "Time management",
+      "Problem-solving",
+      "Graphic design",
+      "Presentation skills"
+    ],
+    answer: 1
+  },
+  {
+    n: 19,
+    q: "As an emerging entrepreneur, R-New Company is considering investing in renewable energy sources as climate change reduction. Mr. Carl and Mr. Dan have been tasked with preparing a feasibility report. During their research, they discover that while the long-term environmental benefits are significant, the initial costs for the installation are extremely high. What should be the primary recommendation in your feasibility report?",
+    choices: [
+      "Proceed with the investment due to the long-term environmental benefits",
+      "Highlight the high initial costs as a potential barrier to implementation",
+      "Recommend seeking government grants or subsidies to offset the high costs",
+      "Abandon the project due to the high costs"
+    ],
+    answer: 2
+  },
+  {
+    n: 20,
+    q: "PharmaCare, a leading healthcare organization, is assessing the feasibility of introducing a new telemedicine service. Its feasibility report needs to address market demand, technology infrastructure, and regulatory compliance. It finds that while there is a strong demand for the service, the existing technology infrastructure is inadequate and would require significant upgrades. What should its feasibility report focus on?",
+    choices: [
+      "The strong demand for telemedicine services",
+      "The inadequacy of the current technology infrastructure and the need for upgrades",
+      "The potential revenue from the new service",
+      "The regulatory compliance required for telemedicine"
+    ],
+    answer: 1
+  },
+  {
+    n: 21,
+    q: "In technical writing, the goal is to communicate information clearly and efficiently. Which of the following represents POOR writing in technical documents?",
+    choices: [
+      "Writing that takes less time to comprehend",
+      "Writing that emphasizes audience benefits",
+      "Writing that takes a short time to read",
+      "Writing that requires a reader to gather additional information to comprehend the content"
+    ],
+    answer: 3
+  },
+  {
+    n: 22,
+    q: "An investigative report on a product recall provides a detailed account of the faulty product batches and affected customers but lacks a timeline of events. How might the absence of a timeline affect the report's usefulness, and what action should be taken?",
+    choices: [
+      "The report is still valid without a timeline, as it provides sufficient detail on the fault and impact.",
+      "The absence of a timeline could hinder understanding the sequence of events and delays in response, so request a revised report with a timeline.",
+      "Focus on immediate actions to address the recall without worrying about the timeline.",
+      "Use the report to develop a new product quality control strategy without addressing the timeline issue."
+    ],
+    answer: 1
+  },
+  {
+    n: 23,
+    q: "Avisha received an incident report indicating a significant production line failure that led to a halt in operations for 4 hours. The report includes details of the equipment involved, the time of the incident, and a brief description of the problem. What should be her first step in addressing this incident?",
+    choices: [
+      "Notify all team members to stop using the affected equipment immediately",
+      "Review the incident report and gather more detailed information about the cause and impact",
+      "Immediately issue a public statement about the incident",
+      "Begin repairs on the equipment without further investigation"
+    ],
+    answer: 1
+  },
+  {
+    n: 24,
+    q: "Alice is writing a letter to a client to inform them of a delay in their order. What is the most polite way to convey this message?",
+    choices: [
+      '"We\'re sorry, but there will be a delay in your order. We hope you can understand."',
+      '"Due to unforeseen circumstances, your order will be delayed. We apologize for the inconvenience."',
+      '"Your order is delayed, and we cannot offer any compensation at this time."',
+      '"There\'s nothing we can do about the delay. We\'re working on it."'
+    ],
+    answer: 1
+  },
+  {
+    n: 25,
+    q: "Your DigiTech Company is exploring the feasibility of launching a new e-commerce platform for your retail business. During the market analysis, you discover that while there is a significant demand for online shopping, your target audience is primarily located in rural areas with limited internet access. Which factor should you prioritize in your feasibility report?",
+    choices: [
+      "The overall market demand for e-commerce",
+      "The technical challenges of reaching rural customers",
+      "The cost of developing the e-commerce platform",
+      "The potential competitors in the e-commerce space"
+    ],
+    answer: 1
+  },
+  {
+    n: 26,
+    q: "Oliver is sending a thank-you letter to a colleague who helped him with a project. What is the most polite way to express his gratitude?",
+    choices: [
+      '"Thanks for helping me out with the project. It was a big help."',
+      '"I appreciate your support with the project. Your assistance was invaluable, and I am grateful for your help."',
+      '"Thanks. I couldn\'t have done it without you."',
+      '"I\'m grateful for your help, but don\'t expect anything in return."'
+    ],
+    answer: 1
+  },
+  {
+    n: 27,
+    q: "The progress report for a software development project shows that the team has completed all planned development phases, but testing needs to catch up. What should be the primary focus to address this issue?",
+    choices: [
+      "Increase the development team's workload to compensate for the delay in testing",
+      "Reallocate resources to the testing phase to expedite the process",
+      "Extend the project timeline to accommodate the delay in testing",
+      "Halt all other project activities until testing catches up"
+    ],
+    answer: 1
+  },
+  {
+    n: 28,
+    q: "Elisha is reviewing an investigative report concerning a workplace safety incident. The report identifies several contributing factors but lacks a clear recommendation for corrective action. What should she do next to ensure the report leads to meaningful improvements?",
+    choices: [
+      "Accept the report as is and implement the identified factors as improvements",
+      "Request a follow-up report with detailed recommendations for a corrective action",
+      "Implement general safety measures without addressing specific factors mentioned in the report",
+      "Disregard the report and focus on other safety initiatives"
+    ],
+    answer: 1
+  },
+  {
+    n: 29,
+    q: "Joana and Jasmin are preparing a feasibility report for a new software development project. During the initial analysis, they find that the project has a high potential for profitability but requires advanced technical expertise that their team currently lacks. What should be their recommendation in the feasibility report?",
+    choices: [
+      "Outsource the technical aspects of the project to a third-party vendor",
+      "Proceed with the project immediately to capitalize on the potential profitability",
+      "Postpone the project until the required technical expertise is available in-house",
+      "Recommend additional training for your team to develop the necessary technical skills"
+    ],
+    answer: 0
+  },
+  {
+    n: 30,
+    q: "A key stakeholder expresses concerns about project risks during your presentation. How should you respond?",
+    choices: [
+      "Downplay the risks to avoid worry",
+      "Acknowledge the concerns and explain your risk mitigation strategies",
+      "Ignore the concerns and focus on the positives",
+      "Remove the risk section from your proposal"
+    ],
+    answer: 1
+  },
+  {
+    n: 31,
+    q: "Consider a scenario where you are working with a technical document written for a specialized audience. The document contains many terms and abbreviations specific to the field. How should you accurately describe the nature of this language?",
+    choices: [
+      "Language used by a specific profession",
+      "Obscure language used to mislead or confuse",
+      "Both A and B",
+      "Neither A nor B"
+    ],
+    answer: 0
+  },
+  {
+    n: 32,
+    q: "Emily is drafting a formal letter to a potential client. Which of the following is the most appropriate complimentary closing for her letter?",
+    choices: ["Cheers,", "Best regards,", "Sincerely,", "Yours truly,"],
+    answer: 2
+  },
+  {
+    n: 33,
+    q: "You need to include a timeline in your proposal. Which format is most effective for clarity?",
+    choices: [
+      "A detailed paragraph description",
+      "A list of bullet points",
+      "A Gantt chart or similar visual timeline",
+      "An appendix with detailed dates"
+    ],
+    answer: 2
+  },
+  {
+    n: 34,
+    q: "Michael is writing a letter of recommendation for a former employee. What is an appropriate way to start the letter?",
+    choices: [
+      '"I have known this individual for many years and they are a hard worker."',
+      '"I am pleased to write this letter of recommendation for [Employee], who worked with us as a [Position]."',
+      '"This is to inform you that [Employee] worked for us."',
+      '"I am writing to endorse [Employee] without much detail."'
+    ],
+    answer: 1
+  },
+  {
+    n: 35,
+    q: "Your local government unit is considering the feasibility of building a new public transportation system. In the feasibility study, it reveals that while the system would greatly reduce traffic congestion, it requires extensive funding; and there is uncertainty about public adoption. What should be the key consideration in the feasibility report?",
+    choices: [
+      "The potential to reduce traffic congestion",
+      "The uncertainty about public adoption of the new system",
+      "The extensive funding required for the project",
+      "The environmental benefits of the transportation system"
+    ],
+    answer: 2
+  },
+  {
+    n: 36,
+    q: "You are drafting a formal business letter to a client, and you need to include the dateline. Which of the following formats is correct?",
+    choices: [
+      "August 8, 2024",
+      "8th August, 2024",
+      "08/08/2024",
+      "2024 August 8"
+    ],
+    answer: 0
+  },
+  {
+    n: 37,
+    q: "The BRB Company is assessing the feasibility of opening a new branch office abroad. During its analysis, it was discovered that the labor costs in the new country are much lower; but the political environment is unstable. What should the feasibility report recommend?",
+    choices: [
+      "Proceed with the expansion due to the lower labor costs.",
+      "Highlight the political instability as a significant risk factor.",
+      "Focus on the potential for cost savings and ignore the political issues",
+      "Recommend postponing the decision until the political situation stabilizes."
+    ],
+    answer: 1
+  },
+  {
+    n: 38,
+    q: "Samantha is drafting a letter to inform employees about a new company initiative. What should be included in the body of the letter?",
+    choices: [
+      "An explanation of the initiative, how it will affect employees, and the steps they need to take to adapt",
+      "A general announcement about the initiative, followed by a list of employees who will be directly involved",
+      "A brief description of the initiative and a link to an internal webpage with more information",
+      "An overview of the company"
+    ],
+    answer: 0
+  },
+  {
+    n: 39,
+    q: "John needs to decline a request for a meeting from a business partner. How should he word his response to remain polite?",
+    choices: [
+      '"I am too busy to meet at this time, so I must decline your request."',
+      '"Unfortunately, my schedule does not permit me to accept your meeting request at the moment."',
+      '"I don\'t have time for this meeting. Maybe another time."',
+      '"I cannot meet with you right now. Try again later."'
+    ],
+    answer: 1
+  },
+  {
+    n: 40,
+    q: "Jessica is closing a business letter and needs to use the signature line for a letter that will be printed and signed. What should she do?",
+    choices: [
+      "Type her name and title only",
+      "Type her name, title, and then sign the letter by hand above her typed name",
+      "Type her name and company name, and then sign the letter digitally",
+      "Type her name, company name, and email address, and then sign the letter at the bottom"
+    ],
+    answer: 1
+  },
+  {
+    n: 41,
+    q: "After investigating an incident where a safety protocol was not followed, you found that the incident could have been prevented with better training. What should be your next course of action?",
+    choices: [
+      "Immediately enforce stricter safety protocols without additional training",
+      "Conduct a review of all safety protocols and update them as necessary",
+      "Develop and implement a comprehensive training program for all employees on safety procedures",
+      "Ignore the training issue and focus on repairing the immediate damage"
+    ],
+    answer: 2
+  },
+  {
+    n: 42,
+    q: "A potential client is concerned about the environmental impact of the project. Where should you address this concern in your proposal?",
+    choices: [
+      "Introduction",
+      "Budget",
+      "Sustainability section within the project description",
+      "Executive summary"
+    ],
+    answer: 2
+  },
+  {
+    n: 43,
+    q: "Your proposal includes collaboration with a subcontractor. How should you present this information?",
+    choices: [
+      "Only mention the subcontractor in the budget section",
+      "Clearly detail the subcontractor's role and qualifications",
+      "Exclude subcontractor details to simplify the proposal",
+      "Mention the subcontractor only if asked by the client"
+    ],
+    answer: 1
+  },
+  {
+    n: 44,
+    q: "The BINI company is considering entering a new international market. In that connection, you have been tasked with preparing a feasibility report. During your research, you find that the target market has a strong demand for your merchandise, but there are significant legal and regulatory barriers to entry. What should be the primary focus of your feasibility report?",
+    choices: [
+      "The potential competition in the new market",
+      "The potential demand and revenue in the new market",
+      "The legal and regulatory challenges and their impact on market entry",
+      "The costs associated with overcoming the legal and regulatory barriers"
+    ],
+    answer: 2
+  },
+  {
+    n: 45,
+    q: "TIU Foods & Beverage Company is considering about acquiring a smaller competitor. During the feasibility analysis, it finds that while the acquisition would provide strategic advantages, the financial health of the target company is poor, with significant debt. What should the feasibility report highlight as a primary concern?",
+    choices: [
+      "The strategic advantages of the acquisition.",
+      "The poor financial health and significant debt of the target company.",
+      "The potential for market expansion post-acquisition.",
+      "The expected increase in market share."
+    ],
+    answer: 1
+  },
+  {
+    n: 46,
+    q: "David is writing a letter to request information from a supplier. How should he frame the body of the letter?",
+    choices: [
+      "Start with a brief introduction, specify the information or items needed, explain why he needs them, and request a timeline for the response.",
+      "Begin with a detailed description of his company's operations, then ask for the information and suggest a meeting to discuss further.",
+      "Open with a request for a quote, include a list of the required items, and ask for the information to be sent as soon as possible.",
+      "Introduce his company and its mission, ask for the information, and offer to provide additional details if needed."
+    ],
+    answer: 0
+  },
+  {
+    n: 47,
+    q: "You realize that a competitor's proposal offers similar services at a lower cost. How should you differentiate your proposal?",
+    choices: [
+      "Match their pricing and compromise on quality",
+      "Highlight the unique benefits and superior quality of your services",
+      "Criticize the competitor's proposal",
+      "Remove all cost details from your proposal"
+    ],
+    answer: 1
+  },
+  {
+    n: 48,
+    q: "Michael is sending a letter as the head of the marketing department. What is the most appropriate way to format his signature line?",
+    choices: [
+      "Michael Smith Marketing Director",
+      "Michael Smith Marketing Director XYZ Corporation",
+      "Michael Smith Marketing Director XYZ Corporation 123 Business Rd. New York, NY 10001",
+      "Michael Smith Marketing Director XYZ Corporation Phone: (123) 456-7890"
+    ],
+    answer: 1
+  },
+  {
+    n: 49,
+    q: "Michael is writing a letter to a potential client to request more information. How should he phrase his request politely?",
+    choices: [
+      '"Send me the information I need as soon as possible."',
+      '"Please provide the details at your earliest convenience. Your assistance would be greatly appreciated."',
+      '"I need this information urgently. Don\'t delay."',
+      '"You should send the requested information right away."'
+    ],
+    answer: 1
+  },
+  {
+    n: 50,
+    q: "Emma is responding to a client who has expressed dissatisfaction with a service. What is the best way for her to address the situation with politeness?",
+    choices: [
+      '"I understand you\'re unhappy, but there\'s nothing we can do about it."',
+      '"Thank you for bringing this to our attention. I\'m sorry to hear about your dissatisfaction and will work to resolve the issue promptly."',
+      '"We\'re sorry, but the service is as it is. We hope you can adapt."',
+      '"Your feedback is noted, but we are unable to make any changes."'
+    ],
+    answer: 1
+  },
+  {
+    n: 51,
+    q: "You are preparing a feasibility report for a new manufacturing plant. The technical feasibility analysis reveals that the current technology in the industry is outdated, but there are promising advancements on the horizon. What should be your course of action?",
+    choices: [
+      "Recommend proceeding with the current technology",
+      "Suggest waiting for the new technology to mature",
+      "Dismiss the technological concerns and focus on financial feasibility",
+      "Cancel the project due to technological uncertainty"
+    ],
+    answer: 1
+  },
+  {
+    n: 52,
+    q: "The sales report noted that the average deal size increased by 10%, but the number of deals closed decreased by 5%. What implications could these trends have for the overall sales strategy?",
+    choices: [
+      "The focus should shift towards increasing the volume of deals rather than just targeting larger deal sizes",
+      "The sales team may need to improve their ability to close deals more efficiently",
+      "The strategy may need to focus on maintaining high-value deals while also increasing deal volume",
+      "Sales targets should be adjusted to reflect the reduced number of deals"
+    ],
+    answer: 2
+  },
+  {
+    n: 53,
+    q: "An educational institution is considering expanding its online course offerings. The feasibility report must analyze the market demand, required technological investments, and competition. As one of the senior leaders, you find that although there is strong competition in the market, your institution has a unique curriculum that could differentiate it. What should be emphasized in your feasibility report?",
+    choices: [
+      "The strong competition in the online education market",
+      "The unique curriculum as a competitive advantage",
+      "The technological investments required for an expansion.",
+      "The potential revenue from the online courses"
+    ],
+    answer: 1
+  },
+  {
+    n: 54,
+    q: "Your proposal must include a section on risk management. What should this section contain to be most effective?",
+    choices: [
+      "A list of all possible risks without solutions",
+      "An identification of key risks, their likelihood, impact, and mitigation strategies",
+      "Only the risks that are likely to occur",
+      "A brief mention of risks with no detailed analysis"
+    ],
+    answer: 1
+  }
+];
+
+const TOTAL = questions.length;
+let answered = 0;
+let submitted = false;
+
+function buildQuiz() {
+  const form = document.getElementById('quiz-form');
+  questions.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `card-${idx}`;
+
+    const letters = ['A','B','C','D'];
+    const choicesHTML = q.choices.map((c, ci) => `
+      <li>
+        <input type="radio" name="q${idx}" id="q${idx}c${ci}" value="${ci}">
+        <label class="choice-label" for="q${idx}c${ci}">
+          <span class="choice-letter">${letters[ci]}.</span>
+          <span>${c}</span>
+        </label>
+      </li>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="q-number-row">
+        <span class="q-num">${q.n}.</span>
+        <span class="q-status" id="status-${idx}">Unanswered</span>
+      </div>
+      <div class="q-body">
+        <p class="q-text">${q.q}</p>
+        <ul class="choices">${choicesHTML}</ul>
+      </div>
+    `;
+    form.appendChild(card);
+
+    // listen for selection — reveal answer immediately
+    q.choices.forEach((_, ci) => {
+      document.getElementById(`q${idx}c${ci}`).addEventListener('change', () => {
+        if (submitted) return;
+
+        const wasAnswered = document.getElementById(`status-${idx}`).textContent !== 'Unanswered';
+        if (!wasAnswered) { answered++; updateProgress(); }
+
+        // lock all radios for this question
+        q.choices.forEach((__, cj) => {
+          document.getElementById(`q${idx}c${cj}`).disabled = true;
+        });
+
+        // apply colour feedback
+        const labels = document.querySelectorAll(`#card-${idx} .choice-label`);
+        const status = document.getElementById(`status-${idx}`);
+
+        labels.forEach((lbl, li) => {
+          lbl.classList.remove('correct','wrong','reveal-correct');
+          if (li === q.answer) lbl.classList.add('reveal-correct');
+        });
+
+        if (ci === q.answer) {
+          labels[ci].classList.remove('reveal-correct');
+          labels[ci].classList.add('correct');
+          status.textContent = '✓ Correct';
+          status.style.color = 'var(--correct)';
+        } else {
+          labels[ci].classList.add('wrong');
+          status.textContent = '✗ Wrong';
+          status.style.color = 'var(--wrong)';
+        }
+
+        // update live score
+        let s = 0;
+        questions.forEach((qq, ii) => {
+          const r = document.querySelector(`input[name="q${ii}"]:checked`);
+          if (r && parseInt(r.value) === qq.answer) s++;
+        });
+        document.getElementById('live-score').textContent = `${s} / ${TOTAL}`;
+      });
+    });
+  });
+}
+
+function updateProgress() {
+  document.getElementById('live-answered').textContent = `${answered} / ${TOTAL}`;
+  document.getElementById('prog-fill').style.width = `${(answered/TOTAL)*100}%`;
+}
+
+function submitQuiz() {
+  if (submitted) return;
+  submitted = true;
+
+  let score = 0;
+  questions.forEach((q, idx) => {
+    const radios = document.querySelectorAll(`input[name="q${idx}"]`);
+    let selected = -1;
+    radios.forEach(r => { if (r.checked) selected = parseInt(r.value); r.disabled = true; });
+
+    const labels = document.querySelectorAll(`#card-${idx} .choice-label`);
+    labels.forEach((lbl, ci) => {
+      if (ci === q.answer) lbl.classList.add('reveal-correct');
+      if (ci === selected && selected !== q.answer) lbl.classList.add('wrong');
+      if (ci === selected && selected === q.answer) { lbl.classList.remove('reveal-correct'); lbl.classList.add('correct'); }
+    });
+
+    if (selected === q.answer) score++;
+    const status = document.getElementById(`status-${idx}`);
+    if (selected === -1) { status.textContent = 'Skipped'; }
+    else if (selected === q.answer) { status.textContent = '✓ Correct'; status.style.color = 'var(--correct)'; }
+    else { status.textContent = '✗ Wrong'; status.style.color = 'var(--wrong)'; }
+  });
+
+  const pct = Math.round((score / TOTAL) * 100);
+  document.getElementById('live-score').textContent = `${score} / ${TOTAL}`;
+  document.getElementById('m-pct').textContent = `${pct}%`;
+  document.getElementById('m-frac').textContent = `${score} out of ${TOTAL} correct`;
+
+  let msg = '';
+  if (pct >= 90) msg = 'Outstanding performance! You have demonstrated an excellent command of the material.';
+  else if (pct >= 80) msg = 'Great work! A solid understanding of the subject matter.';
+  else if (pct >= 75) msg = 'Good job — you passed. Review the items you missed to strengthen your knowledge.';
+  else if (pct >= 60) msg = 'You passed, but there is room for improvement. Revisit the topics you struggled with.';
+  else msg = 'Keep studying! Review the course material carefully and try again.';
+
+  document.getElementById('m-msg').textContent = msg;
+  document.getElementById('modal').classList.add('show');
+
+  document.querySelector('.btn-submit').textContent = 'Submitted ✓';
+  document.querySelector('.btn-submit').style.background = 'var(--correct)';
+}
+
+buildQuiz();
+updateProgress();
+</script>
+</body>
+</html>
